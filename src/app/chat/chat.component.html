@@ -1,0 +1,115 @@
+<!--<header>-->
+<!--  <nav class="navbar navbar-expand-md navbar-dark bg-dark">-->
+<!--    <a class="navbar-brand" href="#">Chat app</a>-->
+<!--    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample04"-->
+<!--            aria-controls="navbarsExample04" aria-expanded="false" aria-label="Toggle navigation">-->
+<!--      <span class="navbar-toggler-icon"></span>-->
+<!--    </button>-->
+
+<!--    <div class="collapse navbar-collapse" id="navbarsExample04">-->
+<!--      <ul class="navbar-nav mr-auto">-->
+<!--      </ul>-->
+<!--    </div>-->
+<!--  </nav>-->
+<!--</header>-->
+
+<!--<main class="chat">-->
+<!--  <div class="container">-->
+<!--    <div class="chat-content">-->
+<!--      <div class="card">-->
+<!--        <ul class="list-group list-group-flush">-->
+<!--          <li class="list-group-item">-->
+<!--            <strong>Thailung: </strong>-->
+<!--            <span>Hello!</span>-->
+<!--          </li>-->
+<!--          <li class="list-group-item">-->
+<!--            <strong>Emtrix: </strong>-->
+<!--            <span>Hi!</span>-->
+<!--          </li>-->
+<!--        </ul>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--    <form (ngSubmit)="login()">-->
+<!--      <div class="chat-send row">-->
+<!--        <div class="col-2">-->
+<!--          <input type="text" class="form-control" name="user" id="input-user" ngModel>-->
+<!--        </div>-->
+<!--        <div class="col-8">-->
+<!--          <input type="text" class="form-control" name="message" id="input-message" ngModel>-->
+<!--        </div>-->
+<!--        <div class="col-2">-->
+<!--          <button type="submit" class="btn btn-primary">Send</button>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </form>-->
+<!--  </div>-->
+<!--</main>-->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css"
+        integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"/>
+  <title>ChatClient</title>
+</head>
+<body>
+<div class="chat-container">
+  <header class="chat-header">
+    <h5><i class="fas fa-smile"></i> SP Chat Client</h5>
+    <h4>{{currentView}}</h4>
+    <h5 *ngIf="inChatView" (click)="openUserSettings()"><i class="fas fa-user-alt"></i></h5>
+    <!--    <a href="index.html" class="btn">Leave Room</a>-->
+  </header>
+  <main class="chat-main">
+    <div class="chat-sidebar">
+      <h3><i class="fas fa-comments"></i> Rooms:</h3>
+      <h2 id="room-name" (click)="switchRoom(room)" *ngFor="let room of rooms">{{room.name}}</h2>
+      <form id="joinRoom-form" [formGroup]="joinRoomForm" (ngSubmit)="joinRoom()">
+        <input
+          id="roomName"
+          type="text"
+          placeholder="Join new room"
+          required
+          autocomplete="off"
+          formControlName="roomName"
+        />
+        <button class="btn"><i class="fas fa-plus-circle"></i></button>
+      </form>
+      <ng-container *ngIf="inChatView">
+        <h2><i class="fas fa-users"></i> Users</h2>
+        <ul id="users">
+          <li *ngFor=" let user of currentChatroom.users">{{user}}</li>
+        </ul>
+      </ng-container>
+
+    </div>
+    <div class="chat-messages" *ngIf="inChatView">
+      <div class="message" *ngFor="let message of currentChatroom.messages">
+        <p class="meta">{{message.userName}}<span> 9:12pm</span></p>
+        <p class="text">
+          {{message.message}}
+        </p>
+      </div>
+    </div>
+    <ProfileComponent *ngIf="!inChatView"></ProfileComponent>
+  </main>
+
+  <div class="chat-form-container" >
+    <form id="chat-form" [formGroup]="sendMessageForm" (ngSubmit)="sendMessage()" *ngIf="inChatView">
+      <input
+        id="msg"
+        type="text"
+        placeholder="Enter Message"
+        required
+        autocomplete="off"
+        formControlName="message"
+      />
+      <button class="btn"><i class="fas fa-paper-plane"></i> Send</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

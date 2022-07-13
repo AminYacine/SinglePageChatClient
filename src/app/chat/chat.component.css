@@ -1,3 +1,16 @@
+/*.chat {*/
+/*  margin-top: 10rem; ;*/
+/*}*/
+
+/*div.chat-content {*/
+/*  border-radius: .25rem;*/
+/*  height: 40rem;*/
+/*  margin-bottom: 2rem;*/
+/*}*/
+
+/*.card {*/
+/*  height: 100%;*/
+/*}*/
 @import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
 
 :root {
@@ -31,11 +44,10 @@ a {
 
 .btn {
   cursor: pointer;
-  padding: 5px 15px;
+  padding: 2px 4px ;
   background: var(--light-color);
   color: var(--dark-color-a);
   border: 0;
-  font-size: 17px;
 }
 
 /* Chat Page */
@@ -54,8 +66,8 @@ a {
   border-top-right-radius: 5px;
   padding: 15px;
   display: flex;
-  align-items: center;
-  justify-content: space-around;
+  align-items: center ;
+  justify-content: space-between;
 }
 
 .chat-main {
@@ -74,16 +86,19 @@ a {
   font-size: 20px;
   background: rgba(0, 0, 0, 0.1);
   padding: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
 }
 
 .chat-sidebar h3 {
   margin-bottom: 15px;
+  margin-top: 15px;
+  font-size: 20px;
 }
 
 .chat-sidebar ul li {
   padding: 10px 0;
 }
+
 
 .chat-messages {
   padding: 30px;
@@ -159,7 +174,7 @@ a {
   margin-bottom: 5px;
 }
 
-.join-main input[type='text'], input[type='password']  {
+.join-main input[type='text'] {
   font-size: 16px;
   padding: 5px;
   height: 40px;
