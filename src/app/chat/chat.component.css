@@ -44,10 +44,14 @@ a {
 
 .btn {
   cursor: pointer;
-  padding: 2px 4px ;
+  padding: 2px 4px;
   background: var(--light-color);
   color: var(--dark-color-a);
   border: 0;
+}
+
+.userProfile h5 a {
+  color: #fff;
 }
 
 /* Chat Page */
@@ -66,7 +70,7 @@ a {
   border-top-right-radius: 5px;
   padding: 15px;
   display: flex;
-  align-items: center ;
+  align-items: center;
   justify-content: space-between;
 }
 
