@@ -11,6 +11,10 @@ import {ChatService} from "../services/chatService/chat.service";
 import {RoomLeftDTO} from "../models/room/RoomLeftDTO";
 import {AuthenticationService} from "../services/authentication.service";
 import {Router} from "@angular/router";
+import {JWTAuthDTO} from "../models/login/JWTAuthDTO";
+import {Subscription} from "rxjs";
+import {User} from "../models/User";
+import {ServerInfo} from "../models/room/ServerInfo";
 
 @Component({
   selector: 'app-chat',
@@ -28,16 +32,37 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
 
   sendMessageForm: FormGroup;
   message: FormControl;
+  private socketStatusSubscription!: Subscription;
 
 
   ngOnInit(): void {
-    this.evtHandlerService.message.subscribe(eventDTO => {
-      this.handleEvent(eventDTO);
+    this.evtHandlerService.message.subscribe({
+      next: eventDTO => {
+        this.handleEvent(eventDTO);
+      },
+      error: err => {
+        //todo display error message
+        console.log(err);
+      },
     });
+
+    this.socketStatusSubscription = this.evtHandlerService.socketStatus.subscribe({
+      next: value => {
+        const ev: Event = value;
+        //todo message in ui
+        console.log("Connection to server successful", ev.type);
+      },
+      complete: () => {
+        //todo server offline, try again later by reloading the page
+        console.log("Connection closed");
+      }
+    })
+
   }
 
   ngOnDestroy(): void {
     this.evtHandlerService.message.unsubscribe();
+    this.authService.loggedOut();
   }
 
   constructor(
@@ -65,7 +90,11 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
         break;
       }
       case EventTypes.MessageSendToRoom: {
-        this.handleMessageSendToRoom(eventDTO);
+        this.handleMessageSendToRoom(eventDTO.value);
+        break;
+      }
+      case EventTypes.LogginFailed: {
+        this.handleLoggInFailed();
         break;
       }
       case EventTypes.LoggedOut: {
@@ -76,10 +105,22 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
         this.handleRoomLeft(eventDTO);
         break;
       }
+      case EventTypes.SocketIdEvent: {
+        this.handleSocketIDEvent(eventDTO);
+        break;
+      }
       default: {
         console.log("Server: ", eventDTO);
       }
     }
+  }
+
+  private handleSocketIDEvent(eventDTO: EventDTO) {
+    console.log("New socket connection", eventDTO.value)
+    this.evtHandlerService.message.next(
+      new EventDTO(EventTypes.AuthWithJWTToken,
+        new JWTAuthDTO(localStorage.getItem("token")!, localStorage.getItem("email")!)
+      ));
   }
 
   handleJoinedRoomEvent(event: EventDTO): void {
@@ -87,19 +128,24 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     if (joinedRoomInfo.email == localStorage.getItem("email")) {
 
       this.currentChatroom = new ChatRoom(joinedRoomInfo.roomName);
+      this.currentChatroom.addUser(new User(joinedRoomInfo.email, joinedRoomInfo.name));
       this.rooms.push(this.currentChatroom);
 
       this.currentView = "Current Room: " + joinedRoomInfo.roomName;
       this.inChatView = true;
+
     } else {
+      const joinedRoom = this.chatService.getRoomByName(joinedRoomInfo.roomName, this.rooms);
+      if (joinedRoom !== undefined) {
+        joinedRoom.addUser(new User(joinedRoomInfo.email, joinedRoomInfo.name));
+      }
       //todo display which user has joined the room, add user to list in room
     }
-    console.log("Joined Room");
+    console.log("User ", joinedRoomInfo.name, "joined the Chat");
   }
 
-  handleMessageSendToRoom(event: EventDTO): void {
-    const receivedMessage: ReceivedMessageDTO = event.value;
-    const chatRoom = this.rooms.find(room => room.name == receivedMessage.roomName)
+  handleMessageSendToRoom(receivedMessage: ReceivedMessageDTO): void {
+    const chatRoom = this.chatService.getRoomByName(receivedMessage.roomName, this.rooms);
     if (chatRoom != undefined) {
       chatRoom.messages.push(receivedMessage);
     }
@@ -112,29 +158,38 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     this.router.navigateByUrl("/login");
   }
 
+  handleLoggInFailed() {
+    //todo display message: login gain, the session is expired
+    console.log("login failed")
+    this.logout();
+  }
 
   handleRoomLeft(event: EventDTO) {
-    const message: RoomLeftDTO = event.value;
-    console.log(message.email, "left room ", message.roomName);
+    const roomLeftDTO: RoomLeftDTO = event.value;
+    console.log(roomLeftDTO.email, "left room ", roomLeftDTO.roomName);
+    const affectedRoom = this.chatService.getRoomByName(roomLeftDTO.roomName, this.rooms);
 
-    //if the user is the current user, the room will be removed
-    if (message.email === localStorage.getItem("email")) {
-      this.rooms = this.rooms.filter(room => {
-        return room.name !== message.roomName;
-      });
-      if (this.currentChatroom.name === message.roomName) {
-        //if no rooms are joined the user profile will be displayed
-        if (this.rooms.length == 0) {
-          this.currentChatroom = new ChatRoom("placeHolder");
-          this.openUserSettings();
-        } else {
-          this.switchRoom(this.rooms[0]);
+    if (affectedRoom !== undefined) {
+      //if the user is the current user, the room will be removed
+      if (roomLeftDTO.email === localStorage.getItem("email")) {
+        this.rooms = this.chatService.removeRoom(affectedRoom, this.rooms);
+        if (this.currentChatroom.name === roomLeftDTO.roomName) {
+          //if no rooms are joined the user profile will be displayed
+          if (this.rooms.length == 0) {
+            this.currentChatroom = new ChatRoom("placeHolder");
+            this.openUserSettings();
+          } else {
+            this.switchRoom(this.rooms[0]);
+          }
+        }
+      } else {
+        const leftUser = affectedRoom.getUser(roomLeftDTO.email);
+        if (leftUser !== undefined) {
+          affectedRoom.removeUser(leftUser);
+          this.handleMessageSendToRoom(new ServerInfo("User \"" + leftUser.userName+ "\" left the chat", roomLeftDTO.roomName));
         }
       }
-    } else {
-      //todo show user left room and remove from active users
     }
-
   }
 
 
