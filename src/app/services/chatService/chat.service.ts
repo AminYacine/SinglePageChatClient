@@ -27,7 +27,6 @@ export class ChatService {
     }
   }
 
-
   /**
    * Method to send message from input field to websocket
    */
@@ -41,7 +40,6 @@ export class ChatService {
       message.reset();
     }
   }
-
 
   /**
    * Method to send Logout event to websocket
@@ -60,5 +58,15 @@ export class ChatService {
       new EventDTO(
         EventTypes.LeaveRoom, {"roomName": roomName}
       ));
+  }
+
+  getRoomByName(roomName: string, rooms: ChatRoom[]): ChatRoom | undefined {
+    return rooms.find(room => roomName === room.name);
+  }
+
+  removeRoom(affectedRoom: ChatRoom, rooms: ChatRoom[]): ChatRoom[] {
+    return rooms.filter(room => {
+      return room.name !== affectedRoom.name;
+    });
   }
 }
