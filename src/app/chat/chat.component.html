@@ -32,7 +32,7 @@
       <ng-container *ngIf="inChatView">
         <h2><i class="fas fa-users"></i> Users</h2>
         <ul id="users">
-          <li *ngFor=" let user of currentChatroom.users">{{user}}</li>
+          <li *ngFor=" let user of currentChatroom.users">{{user.userName}}</li>
         </ul>
       </ng-container>
 
