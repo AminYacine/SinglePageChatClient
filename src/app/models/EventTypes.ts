@@ -1,9 +1,12 @@
 export enum EventTypes {
+  SocketIdEvent = "SocketIdEvent",
+
   Login = "Login",
   LoggedIn = "LoggedIn",
   LogginFailed = "LogginFailed",
   Logout = "Logout",
   LoggedOut = "LoggedOut",
+  AuthWithJWTToken = "AuthWithJWTToken",
 
   JoinRoom = "JoinRoom",
   RoomJoined = "RoomJoined",
