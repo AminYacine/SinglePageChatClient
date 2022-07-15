@@ -9,6 +9,7 @@ import {LoginDTO} from "../models/login/LoginDTO";
 import {Router} from "@angular/router";
 import {AuthenticationService} from "../services/authentication.service";
 import {LoggedOutDTO} from "../models/login/LoogedOutDTO";
+import {Subscription} from "rxjs";
 
 @Component({
   selector: 'app-login',
@@ -22,6 +23,7 @@ export class LoginComponent implements OnInit {
   password: FormControl;
   isLoggedIn: boolean = false;
   showInvalidInput: boolean = false;
+  socketStatusSubscription!: Subscription;
 
   constructor(private evtHandlerService: EventHandlerService, private router: Router, private authService: AuthenticationService) {
 
@@ -34,17 +36,37 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
+
     if (this.authService.isUserLoggedIn()) {
       this.router.navigateByUrl("/chat");
     }
+
     //if something is pushed to the message subject this observer will be notified and checks the type
-    this.evtHandlerService.message.subscribe(eventDTO => {
-      this.handleEvent(eventDTO);
+    this.evtHandlerService.message.subscribe({
+      next: eventDTO => {
+        this.handleEvent(eventDTO);
+      },
+      error: err => {
+        console.log("error", err)
+      },
     });
+
+    this.socketStatusSubscription = this.evtHandlerService.socketStatus.subscribe({
+        next: value => {
+          const ev: Event = value;
+          //todo message in ui
+          console.log("Connection to server successful", ev.type);
+        },
+        complete: () => {
+          //todo server offline, try again later by reloading the page
+          console.log("Connection closed");
+        }
+      });
   }
 
   ngOnDestroy(): void {
     this.evtHandlerService.message.unsubscribe();
+    this.socketStatusSubscription.unsubscribe();
   }
 
 
@@ -92,7 +114,7 @@ export class LoginComponent implements OnInit {
    */
   login() {
     if (this.loginData.valid) {
-      this.evtHandlerService.message.next(new EventDTO("Login", new LoginDTO(this.email.value, this.password.value)))
+      this.evtHandlerService.message.next(new EventDTO(EventTypes.Login, new LoginDTO(this.email.value, this.password.value)))
     } else {
       this.showInvalidInput = true;
     }
