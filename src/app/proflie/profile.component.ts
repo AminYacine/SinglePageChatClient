@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {Session} from "../models/Session";
 
 @Component({
@@ -7,10 +7,11 @@ import {Session} from "../models/Session";
   styleUrls: ['./profile.component.css']
 })
 export class ProfileComponent implements OnInit {
-  username:string = Session.username;
-  email:string = Session.email;
+  username = localStorage.getItem("username");
+  email = localStorage.getItem("email");
 
-  constructor() { }
+  constructor() {
+  }
 
   ngOnInit(): void {
   }
