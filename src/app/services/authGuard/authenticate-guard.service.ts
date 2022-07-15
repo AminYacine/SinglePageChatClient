@@ -37,6 +37,7 @@ export class AuthenticateGuard implements CanActivate, CanActivateChild, CanLoad
       this.router.navigateByUrl("/login");
       return false;
     } else {
+      console.log("UserStillLogin")
       return true;
     }
   }
