@@ -1,6 +1,6 @@
 export class RoomJoinedDTO {
-  email:string;
-  name:string;
+  email: string;
+  name: string;
   roomName: string;
 
   constructor(email: string, name: string, roomName: string) {

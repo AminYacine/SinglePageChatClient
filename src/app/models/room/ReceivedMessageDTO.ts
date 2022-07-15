@@ -1,8 +1,8 @@
 export class ReceivedMessageDTO {
-  email : string;
-  message : string;
-  roomName : string;
-  userName : string;
+  email: string;
+  message: string;
+  roomName: string;
+  userName: string;
 
   constructor(email: string, message: string, roomName: string, userName: string) {
     this.email = email;

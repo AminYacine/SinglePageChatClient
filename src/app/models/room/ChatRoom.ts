@@ -1,11 +1,11 @@
 import {ReceivedMessageDTO} from "./ReceivedMessageDTO";
 
 export class ChatRoom {
-  name:string = ""
+  name: string = ""
   messages: ReceivedMessageDTO[] = [];
   users: string[] = [];
 
-  constructor(name:string) {
+  constructor(name: string) {
     this.name = name;
   }
 
@@ -13,7 +13,7 @@ export class ChatRoom {
     this.messages.push(chatMessage);
   }
 
-  addUser(user:string) {
+  addUser(user: string) {
     this.users.push(user);
   }
 }

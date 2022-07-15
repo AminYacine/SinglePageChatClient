@@ -1,6 +1,6 @@
 export class VoiceGrantedDTO {
-  email:string;
-  roomName:string;
+  email: string;
+  roomName: string;
   voice: boolean;
 
   constructor(email: string, roomName: string, voice: boolean) {
