@@ -9,7 +9,7 @@ import {EventTypes} from "../models/EventTypes";
 import {LoggedOutDTO} from "../models/login/LoogedOutDTO";
 import {ChatService} from "../services/chatService/chat.service";
 import {RoomLeftDTO} from "../models/room/RoomLeftDTO";
-import {AuthenticationService} from "../services/authentication.service";
+import {AuthenticationService} from "../services/authService/authentication.service";
 import {Router} from "@angular/router";
 import {JWTAuthDTO} from "../models/login/JWTAuthDTO";
 import {Subscription} from "rxjs";

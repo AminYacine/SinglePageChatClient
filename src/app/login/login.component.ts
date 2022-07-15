@@ -7,7 +7,7 @@ import {LoggedInDTO} from "../models/login/LoggedInDTO";
 import {Session} from "../models/Session";
 import {LoginDTO} from "../models/login/LoginDTO";
 import {Router} from "@angular/router";
-import {AuthenticationService} from "../services/authentication.service";
+import {AuthenticationService} from "../services/authService/authentication.service";
 import {LoggedOutDTO} from "../models/login/LoogedOutDTO";
 import {Subscription} from "rxjs";
 
