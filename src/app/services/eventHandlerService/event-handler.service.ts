@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {EventDTO} from "../../models/EventDTO";
-import {map, Subject} from "rxjs";
+import {map, Observable, Subject} from "rxjs";
 import {WebSocketService} from "../webSocketService/web-socket.service";
 
 @Injectable({
@@ -12,6 +12,8 @@ export class EventHandlerService {
   // todo add DTOs for every type
   public message: Subject<EventDTO>;
 
+  public socketStatus: Observable<any>;
+
   constructor(private wsService: WebSocketService) {
 
     this.message = <Subject<EventDTO>>wsService
@@ -22,5 +24,6 @@ export class EventHandlerService {
             return JSON.parse(response.data);
           })
       );
+    this.socketStatus = WebSocketService.socketStatus;
   }
 }
