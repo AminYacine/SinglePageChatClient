@@ -1,13 +1,21 @@
 export class Session {
-  public static id: number = -1;
-  public static token: string = "";
-  public static email: string = "";
-  public static username:string = "";
+  public id: number = -1;
+  public token: string = "";
+  public email: string = "";
+  public username: string = "";
 
-  static resetSession() {
+
+  resetSession() {
     this.id = -1;
     this.token = "";
     this.email = "";
     this.username = "";
+  }
+
+  constructor(id: number, token: string, email: string, username: string) {
+    this.id = id;
+    this.token = token;
+    this.email = email;
+    this.username = username;
   }
 }
