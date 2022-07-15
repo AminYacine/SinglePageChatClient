@@ -19,7 +19,6 @@ export class AuthenticationService {
   }
 
   isUserLoggedIn(): boolean {
-    console.log("LoginCheck", localStorage.getItem("token"))
     return localStorage.getItem("token") != null;
   }
 
