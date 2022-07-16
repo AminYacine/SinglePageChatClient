@@ -7,6 +7,8 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {AppRoutingModule} from "./app-routing.module";
 import {LoginComponent} from './login/login.component';
 import {ProfileComponent} from "./proflie/profile.component";
+import {WebSocketService} from "./services/webSocketService/web-socket.service";
+import {EventHandlerService} from "./services/eventHandlerService/event-handler.service";
 
 @NgModule({
   declarations: [
