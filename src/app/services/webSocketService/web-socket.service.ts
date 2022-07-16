@@ -48,7 +48,7 @@ export class WebSocketService {
   //Following two functions are implemented by taking this Blog-Post as reference
   // (https://dev.to/ndrbrt/wait-for-the-websocket-connection-to-be-open-before-sending-a-message-1h12)
   /**
-   * Method to send events to websocket if connection is open,if not a wait function is called
+   * Method to send events to websocket if connection is open,if not a wait function is called.
    * If the wait function has exceeded the predefined time, an error message will be displayed and the user is redirected to the login page
    * @param socket the socket instance the connection status is checked
    * @param data the event that is sent to the socket

@@ -11,7 +11,6 @@ export class EventHandlerService {
   // todo add enum for every type
   // todo add DTOs for every type
   public message: Subject<EventDTO>;
-
   public socketStatus: Observable<any>;
 
   constructor(private wsService: WebSocketService) {
