@@ -1,13 +1,10 @@
-export class User {
-
+export class RenameUserDTO {
   email: string;
   userName: string;
-  oldUserName: string;
 
   constructor(email: string, userName: string) {
     this.email = email;
     this.userName = userName;
-    this.oldUserName = "";
   }
 
 }

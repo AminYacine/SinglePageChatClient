@@ -2,19 +2,19 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {EventHandlerService} from "../services/eventHandlerService/event-handler.service";
 import {EventDTO} from "../models/EventDTO";
-import {RoomJoinedDTO} from "../models/room/RoomJoinedDTO";
+import {RoomJoinedDTO} from "../models/room/dtos/RoomJoinedDTO";
 import {ChatRoom} from "../models/room/ChatRoom";
-import {ReceivedMessageDTO} from "../models/room/ReceivedMessageDTO";
+import {ReceivedMessageDTO} from "../models/room/dtos/ReceivedMessageDTO";
 import {EventTypes} from "../models/EventTypes";
 import {LoggedOutDTO} from "../models/login/LoogedOutDTO";
 import {ChatService} from "../services/chatService/chat.service";
-import {RoomLeftDTO} from "../models/room/RoomLeftDTO";
+import {RoomLeftDTO} from "../models/room/dtos/RoomLeftDTO";
 import {AuthenticationService} from "../services/authService/authentication.service";
-import {Router} from "@angular/router";
 import {JWTAuthDTO} from "../models/login/JWTAuthDTO";
 import {Subscription} from "rxjs";
 import {User} from "../models/User";
 import {ServerInfo} from "../models/room/ServerInfo";
+import {UserRenamedDTO} from "../models/user/UserRenamedDTO";
 
 @Component({
   selector: 'app-chat',
@@ -35,15 +35,32 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   private socketStatusSubscription!: Subscription;
 
 
+  constructor(
+    private evtHandlerService: EventHandlerService,
+    private chatService: ChatService,
+    private authService: AuthenticationService,
+  ) {
+
+    this.roomName = new FormControl("", Validators.required);
+    this.joinRoomForm = new FormGroup({
+      roomName: this.roomName
+    })
+
+    this.message = new FormControl("", Validators.required);
+    this.sendMessageForm = new FormGroup({
+      message: this.message
+    })
+  }
+
   ngOnInit(): void {
-    console.log("init")
+    console.log("chat init")
     this.evtHandlerService.message.subscribe({
       next: eventDTO => {
         this.handleEvent(eventDTO);
       },
       error: err => {
         //todo display error message
-        console.log(err);
+        console.log("error",err);
       },
     });
 
@@ -62,28 +79,11 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   }
 
   async ngOnDestroy(): Promise<void> {
-    console.log("unsubscribed");
+    console.log("chat unsubscribed");
     this.evtHandlerService.message.unsubscribe();
     this.socketStatusSubscription.unsubscribe();
     await this.chatService.logout();
     this.authService.loggedOut();
-  }
-
-  constructor(
-    private evtHandlerService: EventHandlerService,
-    private chatService: ChatService,
-    private authService: AuthenticationService,
-  ) {
-
-    this.roomName = new FormControl("", Validators.required);
-    this.joinRoomForm = new FormGroup({
-      roomName: this.roomName
-    })
-
-    this.message = new FormControl("", Validators.required);
-    this.sendMessageForm = new FormGroup({
-      message: this.message
-    })
   }
 
   private handleEvent(eventDTO: EventDTO) {
@@ -112,6 +112,11 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
         this.handleSocketIDEvent(eventDTO);
         break;
       }
+      case EventTypes.UserRenamed: {
+        console.log("IN Chat renemeduser")
+        this.handleRenamedUser(eventDTO.value);
+        break;
+      }
       default: {
         console.log("Server: ", eventDTO);
       }
@@ -122,15 +127,29 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     console.log("New socket connection", eventDTO.value)
     this.evtHandlerService.message.next(
       new EventDTO(EventTypes.AuthWithJWTToken,
-        new JWTAuthDTO(localStorage.getItem("token")!, localStorage.getItem("email")!)
+        new JWTAuthDTO(this.authService.getToken()!, this.authService.getEmail()!)
       ));
   }
 
-  handleJoinedRoomEvent(event: EventDTO): void {
-    const roomJoinedDTO: RoomJoinedDTO = event.value;
-    if (roomJoinedDTO.email == localStorage.getItem("email")) {
+  private handleRenamedUser(renamedEvent: UserRenamedDTO) {
+    if (renamedEvent.email !== this.authService.getEmail()) {
+      this.rooms.forEach(room => {
+       const user = room.users.find(user => user.email === renamedEvent.email);
+       if (user !== undefined) {
+         user.userName = renamedEvent.name;
+       }
+      });
+      console.log("User "+ renamedEvent.email +" changed username to ")
+    }
 
-      const newChatRoom =  new ChatRoom(roomJoinedDTO.roomName);
+  }
+
+  handleJoinedRoomEvent(event: EventDTO): void {
+    console.log("injoinedRoom");
+    const roomJoinedDTO: RoomJoinedDTO = event.value;
+    if (roomJoinedDTO.email == this.authService.getEmail()) {
+
+      const newChatRoom = new ChatRoom(roomJoinedDTO.roomName);
       this.rooms.push(newChatRoom);
       this.switchRoom(newChatRoom);
       this.currentChatroom.addUser(new User(roomJoinedDTO.email, roomJoinedDTO.name));
@@ -145,10 +164,10 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     console.log("User ", roomJoinedDTO.name, "joined the Chat");
   }
 
-  handleMessageSendToRoom(receivedMessage: ReceivedMessageDTO): void {
+  private handleMessageSendToRoom(receivedMessage: ReceivedMessageDTO): void {
     const chatRoom = this.chatService.getRoomByName(receivedMessage.roomName, this.rooms);
     if (chatRoom != undefined) {
-      chatRoom.messages.push(receivedMessage);
+      chatRoom.addMessage(receivedMessage);
       if (chatRoom !== this.currentChatroom) {
         chatRoom.incrementUnreadMessages();
       }
@@ -156,26 +175,26 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
 
   }
 
-  handleLoggedOutEvent(event: EventDTO) {
+  private handleLoggedOutEvent(event: EventDTO) {
     const message: LoggedOutDTO = event.value;
     console.log("LoggedOut ", message.email);
     this.authService.loggedOut();
   }
 
-  handleLoggInFailed() {
+  private handleLoggInFailed() {
     //todo display message: login gain, the session is expired
     console.log("login failed")
     this.logout();
   }
 
-  handleRoomLeft(event: EventDTO) {
+  private handleRoomLeft(event: EventDTO) {
     const roomLeftDTO: RoomLeftDTO = event.value;
     console.log(roomLeftDTO.email, "left room ", roomLeftDTO.roomName);
     const affectedRoom = this.chatService.getRoomByName(roomLeftDTO.roomName, this.rooms);
 
     if (affectedRoom !== undefined) {
       //if the user is the current user, the room will be removed
-      if (roomLeftDTO.email === localStorage.getItem("email")) {
+      if (roomLeftDTO.email === this.authService.getEmail()) {
         this.rooms = this.chatService.removeRoom(affectedRoom, this.rooms);
         if (this.currentChatroom.name === roomLeftDTO.roomName) {
           //if no rooms are joined the user profile will be displayed
