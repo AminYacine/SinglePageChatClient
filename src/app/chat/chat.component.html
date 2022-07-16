@@ -41,7 +41,7 @@
     </div>
     <div class="chat-messages" *ngIf="inChatView">
       <div class="message" *ngFor="let message of currentChatroom.messages">
-        <p class="meta">{{message.userName}}<span> 9:12pm</span></p>
+        <p class="meta">{{message.userName}}<span> {{message.sentAt}}</span></p>
         <p class="text">
           {{message.message}}
         </p>
