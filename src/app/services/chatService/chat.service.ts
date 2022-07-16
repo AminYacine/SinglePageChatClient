@@ -3,7 +3,7 @@ import {EventDTO} from "../../models/EventDTO";
 import {EventTypes} from "../../models/EventTypes";
 import {EventHandlerService} from "../eventHandlerService/event-handler.service";
 import {FormControl, FormGroup} from "@angular/forms";
-import {SendChatMessageDTO} from "../../models/SendChatMessageDTO";
+import {SendChatMessageDTO} from "../../models/room/dtos/SendChatMessageDTO";
 import {ChatRoom} from "../../models/room/ChatRoom";
 
 @Injectable({
@@ -34,7 +34,7 @@ export class ChatService {
     if (sendMessageForm.valid) {
       this.evtHandlerService.message.next(
         new EventDTO(
-          "SendMessageToRoom",
+          EventTypes.SendMessage,
           new SendChatMessageDTO(currentChatroom, message.value)
         ));
       message.reset();

@@ -8,6 +8,11 @@ import {Router} from "@angular/router";
 })
 export class AuthenticationService {
 
+  private TOKEN_ID: string = "token";
+  private EMAIL_ID: string = "email";
+  private USERNAME_ID: string = "username";
+  private USERID_ID: string = "id";
+
   constructor(private router: Router) {
   }
 
@@ -21,20 +26,35 @@ export class AuthenticationService {
   }
 
   isUserLoggedIn(): boolean {
-    return localStorage.getItem("token") != null;
+    return localStorage.getItem(this.TOKEN_ID) != null;
   }
 
   private setLocalstorageSession(session: Session) {
-    localStorage.setItem("token", session.token);
-    localStorage.setItem("email", session.email);
-    localStorage.setItem("username", session.username);
-    localStorage.setItem("id", String(session.id));
+    localStorage.setItem(this.TOKEN_ID, session.token);
+    localStorage.setItem(this.EMAIL_ID, session.email);
+    localStorage.setItem(this.USERNAME_ID, session.username);
+    localStorage.setItem(this.USERID_ID, String(session.id));
   }
 
   private clearLocalStorage() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("email");
-    localStorage.removeItem("username");
-    localStorage.removeItem("id");
+    localStorage.removeItem(this.TOKEN_ID);
+    localStorage.removeItem(this.EMAIL_ID);
+    localStorage.removeItem(this.USERNAME_ID);
+    localStorage.removeItem(this.USERID_ID);
   }
+  getEmail() {
+    return localStorage.getItem(this.EMAIL_ID);
+  }
+  getUserName() {
+    return localStorage.getItem(this.USERNAME_ID);
+  }
+
+  getToken() {
+    return localStorage.getItem(this.TOKEN_ID);
+  }
+
+  changeUserName(newUserName: string) {
+    localStorage.setItem(this.USERNAME_ID, newUserName);
+  }
+
 }
