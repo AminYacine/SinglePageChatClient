@@ -36,6 +36,7 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
 
 
   ngOnInit(): void {
+    console.log("init")
     this.evtHandlerService.message.subscribe({
       next: eventDTO => {
         this.handleEvent(eventDTO);
@@ -60,8 +61,11 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
 
   }
 
-  ngOnDestroy(): void {
+  async ngOnDestroy(): Promise<void> {
+    console.log("unsubscribed");
     this.evtHandlerService.message.unsubscribe();
+    this.socketStatusSubscription.unsubscribe();
+    await this.chatService.logout();
     this.authService.loggedOut();
   }
 
@@ -69,7 +73,6 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     private evtHandlerService: EventHandlerService,
     private chatService: ChatService,
     private authService: AuthenticationService,
-    private router: Router
   ) {
 
     this.roomName = new FormControl("", Validators.required);
@@ -124,38 +127,39 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   }
 
   handleJoinedRoomEvent(event: EventDTO): void {
-    const joinedRoomInfo: RoomJoinedDTO = event.value;
-    if (joinedRoomInfo.email == localStorage.getItem("email")) {
+    const roomJoinedDTO: RoomJoinedDTO = event.value;
+    if (roomJoinedDTO.email == localStorage.getItem("email")) {
 
-      this.currentChatroom = new ChatRoom(joinedRoomInfo.roomName);
-      this.currentChatroom.addUser(new User(joinedRoomInfo.email, joinedRoomInfo.name));
-      this.rooms.push(this.currentChatroom);
-
-      this.currentView = "Current Room: " + joinedRoomInfo.roomName;
-      this.inChatView = true;
+      const newChatRoom =  new ChatRoom(roomJoinedDTO.roomName);
+      this.rooms.push(newChatRoom);
+      this.switchRoom(newChatRoom);
+      this.currentChatroom.addUser(new User(roomJoinedDTO.email, roomJoinedDTO.name));
 
     } else {
-      const joinedRoom = this.chatService.getRoomByName(joinedRoomInfo.roomName, this.rooms);
+      const joinedRoom = this.chatService.getRoomByName(roomJoinedDTO.roomName, this.rooms);
       if (joinedRoom !== undefined) {
-        joinedRoom.addUser(new User(joinedRoomInfo.email, joinedRoomInfo.name));
+        joinedRoom.addUser(new User(roomJoinedDTO.email, roomJoinedDTO.name));
+        this.handleMessageSendToRoom(new ServerInfo("User \"" + roomJoinedDTO.name + "\" joined the chat", joinedRoom.name));
       }
-      //todo display which user has joined the room, add user to list in room
     }
-    console.log("User ", joinedRoomInfo.name, "joined the Chat");
+    console.log("User ", roomJoinedDTO.name, "joined the Chat");
   }
 
   handleMessageSendToRoom(receivedMessage: ReceivedMessageDTO): void {
     const chatRoom = this.chatService.getRoomByName(receivedMessage.roomName, this.rooms);
     if (chatRoom != undefined) {
       chatRoom.messages.push(receivedMessage);
+      if (chatRoom !== this.currentChatroom) {
+        chatRoom.incrementUnreadMessages();
+      }
     }
+
   }
 
   handleLoggedOutEvent(event: EventDTO) {
     const message: LoggedOutDTO = event.value;
     console.log("LoggedOut ", message.email);
     this.authService.loggedOut();
-    this.router.navigateByUrl("/login");
   }
 
   handleLoggInFailed() {
@@ -186,7 +190,7 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
         const leftUser = affectedRoom.getUser(roomLeftDTO.email);
         if (leftUser !== undefined) {
           affectedRoom.removeUser(leftUser);
-          this.handleMessageSendToRoom(new ServerInfo("User \"" + leftUser.userName+ "\" left the chat", roomLeftDTO.roomName));
+          this.handleMessageSendToRoom(new ServerInfo("User \"" + leftUser.userName + "\" left the chat", roomLeftDTO.roomName));
         }
       }
     }
@@ -204,7 +208,6 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   logout() {
     this.chatService.logout();
     this.authService.loggedOut();
-    this.router.navigateByUrl("/login");
   }
 
   leaveRoom(roomName: string) {
@@ -220,6 +223,7 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     this.currentChatroom = chatRoom;
     this.currentView = "Current Room: " + chatRoom.name;
     this.inChatView = true;
+    chatRoom.clearUnreadMessages();
   }
 
   /**

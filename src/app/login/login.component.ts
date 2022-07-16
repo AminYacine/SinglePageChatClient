@@ -67,6 +67,7 @@ export class LoginComponent implements OnInit {
   ngOnDestroy(): void {
     this.evtHandlerService.message.unsubscribe();
     this.socketStatusSubscription.unsubscribe();
+    console.log("unsubscribed");
   }
 
 

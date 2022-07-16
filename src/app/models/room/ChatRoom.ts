@@ -5,9 +5,11 @@ export class ChatRoom {
   name: string = ""
   messages: ReceivedMessageDTO[] = [];
   users: User[] = [];
+  unreadMessages: number;
 
-  constructor(name: string) {
+  constructor(name: string,) {
     this.name = name;
+    this.unreadMessages = 0;
   }
 
   addMessage(chatMessage: ReceivedMessageDTO) {
@@ -28,5 +30,13 @@ export class ChatRoom {
     return this.users.find(user => {
       return user.email === email;
     });
+  }
+
+  incrementUnreadMessages() {
+    this.unreadMessages++;
+  }
+
+  clearUnreadMessages() {
+    this.unreadMessages = 0;
   }
 }

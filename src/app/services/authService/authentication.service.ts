@@ -1,13 +1,14 @@
 import {Injectable} from '@angular/core';
 import {Session} from "../../models/Session";
 import {Observable, of} from "rxjs";
+import {Router} from "@angular/router";
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthenticationService {
 
-  constructor() {
+  constructor(private router: Router) {
   }
 
   loggedIn(session: Session) {
@@ -16,6 +17,7 @@ export class AuthenticationService {
 
   loggedOut() {
     this.clearLocalStorage();
+    this.router.navigateByUrl("/login");
   }
 
   isUserLoggedIn(): boolean {

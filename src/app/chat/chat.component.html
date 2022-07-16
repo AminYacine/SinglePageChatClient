@@ -14,8 +14,10 @@
     <div class="chat-sidebar">
       <h3><i class="fas fa-comments"></i> Rooms:</h3>
       <div id="room-name" *ngFor="let room of rooms">
-        <h2 (click)="switchRoom(room)">{{room.name}} </h2>
-        <div (click)="leaveRoom(room.name)">leave</div>
+        <h2 (click)="switchRoom(room)">{{room.name}}
+          <div *ngIf="room.unreadMessages > 0"> {{room.unreadMessages}}</div>
+          <div (click)="leaveRoom(room.name)">leave</div>
+        </h2>
       </div>
 
       <form id="joinRoom-form" [formGroup]="joinRoomForm" (ngSubmit)="joinRoom()">
