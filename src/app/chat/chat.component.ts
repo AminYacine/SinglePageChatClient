@@ -14,8 +14,10 @@ import {JWTAuthDTO} from "../models/login/JWTAuthDTO";
 import {Subscription} from "rxjs";
 import {User} from "../models/User";
 import {ServerInfo} from "../models/room/ServerInfo";
-import {UserRenamedDTO} from "../models/user/UserRenamedDTO";
+import {UserRenamedInRoomDTO} from "../models/user/UserRenamedInRoomDTO";
 import {PasswordChangedDTO} from "../models/user/PasswordChangedDTO";
+import {RenameUserDTO} from "../models/user/RenameUserDTO";
+import {UserRenamedSingleDTO} from "../models/user/UserRenamedSingleDTO";
 
 @Component({
   selector: 'app-chat',
@@ -112,8 +114,12 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
         this.handleSocketIDEvent(eventDTO);
         break;
       }
-      case EventTypes.UserRenamed: {
-        this.handleRenamedUser(eventDTO.value);
+      case EventTypes.RenamedUserInRoom: {
+        this.handleRenamedUserInRoom(eventDTO.value);
+        break;
+      }
+      case EventTypes.RenamedUser: {
+        this.handleRenamedUserSingle(eventDTO.value);
         break;
       }
       case EventTypes.ChangedUserPassword: {
@@ -134,20 +140,32 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
       ));
   }
 
-  private handleRenamedUser(renamedEvent: UserRenamedDTO) {
+  private handleRenamedUserInRoom(renamedEvent: UserRenamedInRoomDTO) {
     const newName = renamedEvent.name;
-    if (renamedEvent.email === this.authService.getEmail()) {
+    const email = renamedEvent.email;
+    if (email === this.authService.getEmail()) {
+      this.handleRenameSubmitter(newName,email)
+    } else {
+      this.rooms.forEach(room => {
+        const oldName = room.changeUsername(email, newName);
+        this.handleMessageSendToRoom(new ServerInfo(
+          "User \"" + oldName + "\" changed name to  \"" + newName + "\"",
+          room.name));
+      });
+    }
+  }
+
+  private handleRenamedUserSingle(renamedEvent: UserRenamedSingleDTO) {
+    this.handleRenameSubmitter(renamedEvent.name, renamedEvent.email);
+  }
+
+  private handleRenameSubmitter(newName: string, email: string){
       this.authService.changeUserName(newName);
       this.username = newName;
+      this.rooms.forEach(room => {
+        room.changeUsername(email, newName);
+      });
       //todo display successfully renamed
-    }
-    this.rooms.forEach(room => {
-      console.log("inFOREACH")
-      const oldName = room.changeUsername(renamedEvent.email, newName);
-      this.handleMessageSendToRoom(new ServerInfo(
-        "User \"" + oldName + "\" changed name to  \"" + newName+"\"",
-        room.name));
-    });
   }
 
   private handlePasswordChangedEvent(pwChangedDto: PasswordChangedDTO) {
@@ -176,15 +194,11 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   }
 
   private handleMessageSendToRoom(receivedMessage: ReceivedMessageDTO): void {
-    console.log(receivedMessage.roomName)
     const chatRoom = this.chatService.getRoomByName(receivedMessage.roomName, this.rooms);
     if (chatRoom != undefined) {
       chatRoom.addMessage(receivedMessage);
-      console.log(chatRoom.name !== this.currentChatroom.name)
-      console.log(!this.inChatView)
       if (!this.inChatView || chatRoom.name !== this.currentChatroom.name) {
         chatRoom.incrementUnreadMessages();
-        console.log("newMessages:",chatRoom?.unreadMessages)
       }
     }
 
@@ -230,13 +244,17 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     }
   }
 
-  receiveRenameUserEvent($event: EventDTO) {
-    console.log("inchat rename")
-    this.chatService.renameUser($event);
+  receiveRenameUserEvent($event: string) {
+    let roomName = "";
+    if (this.rooms.length > 0) {
+      roomName = this.rooms[0].name;
+    }
+    this.chatService.renameUser(new EventDTO(
+      EventTypes.UserRename, new RenameUserDTO(this.authService.getEmail()!, $event, roomName)
+    ));
   }
 
   receiveChangePasswordEvent($event: EventDTO) {
-    console.log("in chat")
     this.chatService.changePassword($event);
   }
 

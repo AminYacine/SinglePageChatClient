@@ -15,7 +15,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
 
   @Input() username: string = "";
-  @Output() renameUserEvent = new EventEmitter<EventDTO>();
+  @Output() renameUserEvent = new EventEmitter<string>();
   @Output() changePasswordEvent = new EventEmitter<EventDTO>();
   email: string;
 
@@ -62,9 +62,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   renameUser() {
     console.log("clicked rename");
     if (this.usernameFormGroup.valid) {
-      this.renameUserEvent.emit(new EventDTO(
-        EventTypes.RenameUser, new RenameUserDTO(this.authService.getEmail()!, this.usernameInput.value)
-      ));
+      this.renameUserEvent.emit(this.usernameInput.value);
       this.usernameInput.reset();
     }
   }

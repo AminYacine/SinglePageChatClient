@@ -18,8 +18,9 @@ export enum EventTypes {
   SendMessage = "SendMessageToRoom",
   MessageSendToRoom = "MessageSendToRoom",
 
-  RenameUser =  "RenameUser",
-  UserRenamed = "UserRenamed",
+  UserRename =  "UserRename",
+  RenamedUser = "UserRenamed",
+  RenamedUserInRoom = "RenamedUser",
   ChangeUserPassword = "ChangeUserPassword",
   ChangedUserPassword = "ChangedUserPassword",
 }
