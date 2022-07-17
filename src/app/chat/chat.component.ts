@@ -15,6 +15,7 @@ import {Subscription} from "rxjs";
 import {User} from "../models/User";
 import {ServerInfo} from "../models/room/ServerInfo";
 import {UserRenamedDTO} from "../models/user/UserRenamedDTO";
+import {PasswordChangedDTO} from "../models/user/PasswordChangedDTO";
 
 @Component({
   selector: 'app-chat',
@@ -26,7 +27,7 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   currentView: string = "User Profile";
   inChatView: boolean = false;
   currentChatroom: ChatRoom = new ChatRoom("placeHolder");
-
+  username: string;
   joinRoomForm: FormGroup;
   roomName: FormControl;
 
@@ -34,13 +35,12 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   message: FormControl;
   private socketStatusSubscription!: Subscription;
 
-
   constructor(
     private evtHandlerService: EventHandlerService,
     private chatService: ChatService,
     private authService: AuthenticationService,
   ) {
-
+    this.username = this.authService.getUserName()!;
     this.roomName = new FormControl("", Validators.required);
     this.joinRoomForm = new FormGroup({
       roomName: this.roomName
@@ -60,7 +60,7 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
       },
       error: err => {
         //todo display error message
-        console.log("error",err);
+        console.log("error", err);
       },
     });
 
@@ -113,8 +113,11 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
         break;
       }
       case EventTypes.UserRenamed: {
-        console.log("IN Chat renemeduser")
         this.handleRenamedUser(eventDTO.value);
+        break;
+      }
+      case EventTypes.ChangedUserPassword: {
+        this.handlePasswordChangedEvent(eventDTO.value);
         break;
       }
       default: {
@@ -132,19 +135,27 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   }
 
   private handleRenamedUser(renamedEvent: UserRenamedDTO) {
-    if (renamedEvent.email !== this.authService.getEmail()) {
-      this.rooms.forEach(room => {
-       const user = room.users.find(user => user.email === renamedEvent.email);
-       if (user !== undefined) {
-         user.userName = renamedEvent.name;
-       }
-      });
-      console.log("User "+ renamedEvent.email +" changed username to ")
+    const newName = renamedEvent.name;
+    if (renamedEvent.email === this.authService.getEmail()) {
+      this.authService.changeUserName(newName);
+      this.username = newName;
+      //todo display successfully renamed
     }
-
+    this.rooms.forEach(room => {
+      console.log("inFOREACH")
+      const oldName = room.changeUsername(renamedEvent.email, newName);
+      this.handleMessageSendToRoom(new ServerInfo(
+        "User \"" + oldName + "\" changed name to  \"" + newName+"\"",
+        room.name));
+    });
   }
 
-  handleJoinedRoomEvent(event: EventDTO): void {
+  private handlePasswordChangedEvent(pwChangedDto: PasswordChangedDTO) {
+    console.log("Password Successfully changed", pwChangedDto)
+    //todo display successfully password changed
+  }
+
+  private handleJoinedRoomEvent(event: EventDTO): void {
     console.log("injoinedRoom");
     const roomJoinedDTO: RoomJoinedDTO = event.value;
     if (roomJoinedDTO.email == this.authService.getEmail()) {
@@ -165,11 +176,15 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   }
 
   private handleMessageSendToRoom(receivedMessage: ReceivedMessageDTO): void {
+    console.log(receivedMessage.roomName)
     const chatRoom = this.chatService.getRoomByName(receivedMessage.roomName, this.rooms);
     if (chatRoom != undefined) {
       chatRoom.addMessage(receivedMessage);
-      if (chatRoom !== this.currentChatroom) {
+      console.log(chatRoom.name !== this.currentChatroom.name)
+      console.log(!this.inChatView)
+      if (!this.inChatView || chatRoom.name !== this.currentChatroom.name) {
         chatRoom.incrementUnreadMessages();
+        console.log("newMessages:",chatRoom?.unreadMessages)
       }
     }
 
@@ -215,6 +230,15 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     }
   }
 
+  receiveRenameUserEvent($event: EventDTO) {
+    console.log("inchat rename")
+    this.chatService.renameUser($event);
+  }
+
+  receiveChangePasswordEvent($event: EventDTO) {
+    console.log("in chat")
+    this.chatService.changePassword($event);
+  }
 
   sendMessage() {
     this.chatService.sendMessage(this.sendMessageForm, this.currentChatroom.name, this.message);

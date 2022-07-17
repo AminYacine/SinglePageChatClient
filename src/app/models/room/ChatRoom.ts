@@ -28,7 +28,7 @@ export class ChatRoom {
     } else {
       this.messages.push(new MessageBlock(chatMessage));
     }
-
+    console.log(this.messages)
   }
 
   addUser(user: User) {
@@ -42,9 +42,21 @@ export class ChatRoom {
   }
 
   getUser(email: string): User | undefined {
+    if (email === "Server"){
+      return new User("Server","Server");
+    }
     return this.users.find(user => {
       return user.email === email;
     });
+  }
+
+  changeUsername(email:string, newName: string): string {
+    const user = this.getUser(email);
+    if (user !== undefined) {
+     user.changeName(newName);
+     return user.oldUserName;
+    }
+     return newName;
   }
 
   incrementUnreadMessages() {

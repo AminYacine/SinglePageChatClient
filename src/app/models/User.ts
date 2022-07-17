@@ -10,4 +10,9 @@ export class User {
     this.oldUserName = "";
   }
 
+  changeName(newName: string) {
+    this.oldUserName = this.userName;
+    this.userName = newName;
+  }
+
 }

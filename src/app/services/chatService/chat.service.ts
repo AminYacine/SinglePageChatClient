@@ -5,6 +5,7 @@ import {EventHandlerService} from "../eventHandlerService/event-handler.service"
 import {FormControl, FormGroup} from "@angular/forms";
 import {SendChatMessageDTO} from "../../models/room/dtos/SendChatMessageDTO";
 import {ChatRoom} from "../../models/room/ChatRoom";
+import {RenameUserDTO} from "../../models/user/RenameUserDTO";
 
 @Injectable({
   providedIn: 'root'
@@ -39,6 +40,15 @@ export class ChatService {
         ));
       message.reset();
     }
+  }
+
+  renameUser($event: EventDTO) {
+    this.evtHandlerService.message.next($event);
+  }
+
+  changePassword($event: EventDTO) {
+    this.evtHandlerService.message.next($event);
+    console.log("change password sent")
   }
 
   /**

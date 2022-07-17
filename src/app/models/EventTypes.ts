@@ -20,4 +20,6 @@ export enum EventTypes {
 
   RenameUser =  "RenameUser",
   UserRenamed = "UserRenamed",
+  ChangeUserPassword = "ChangeUserPassword",
+  ChangedUserPassword = "ChangedUserPassword",
 }

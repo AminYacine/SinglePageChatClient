@@ -41,7 +41,8 @@
     </div>
     <div class="chat-messages" *ngIf="inChatView">
       <div class="message" *ngFor="let messageBlock of currentChatroom.messages">
-        <p class="meta">{{currentChatroom.getUser(messageBlock.email)!.userName}}<span> {{messageBlock.timeStamp}}</span></p>
+        <p class="meta">{{currentChatroom.getUser(messageBlock.email)!.userName}}
+          <span> {{messageBlock.timeStamp}}</span></p>
         <div *ngFor="let message of messageBlock.messages">
           <p class="text">
             {{message.message}}
@@ -49,7 +50,12 @@
         </div>
       </div>
     </div>
-    <ProfileComponent *ngIf="!inChatView"></ProfileComponent>
+    <ProfileComponent
+      *ngIf="!inChatView"
+      [username]="username"
+      (renameUserEvent)="receiveRenameUserEvent($event)"
+      (changePasswordEvent)="receiveChangePasswordEvent($event)"
+    ></ProfileComponent>
   </main>
 
   <div class="chat-form-container">

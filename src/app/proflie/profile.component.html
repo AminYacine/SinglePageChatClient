@@ -32,21 +32,21 @@
           <button type="submit" class="btn btn-primary">Change Username</button>
         </form>
         <!-- Password reset         -->
-        <form>
+        <form  [formGroup]="changePasswordFormGroup" (ngSubmit)="changePassword()">
           <hr class="my-4"/>
           <div class="row mb-4">
             <div class="col-md-6">
               <div class="form-group">
                 <label for="inputPassword4">Old Password</label>
-                <input type="password" class="form-control" id="inputPassword4"/>
+                <input type="password" class="form-control" id="inputPassword4" formControlName="oldPassword"/>
               </div>
               <div class="form-group">
                 <label for="inputPassword5">New Password</label>
-                <input type="password" class="form-control" id="inputPassword5"/>
+                <input type="password" class="form-control" id="inputPassword5"  formControlName="newPassword"/>
               </div>
               <div class="form-group">
                 <label for="inputPassword6">Confirm Password</label>
-                <input type="password" class="form-control" id="inputPassword6"/>
+                <input type="password" class="form-control" id="inputPassword6" formControlName="confirmPassword"/>
               </div>
             </div>
             <div class="col-md-6">
