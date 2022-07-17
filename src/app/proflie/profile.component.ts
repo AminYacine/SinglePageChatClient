@@ -69,15 +69,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   changePassword() {
     console.log("clicked changePW");
-    if (this.usernameFormGroup.valid) {
+    if (this.changePasswordFormGroup.valid) {
+      console.log("pw valid")
       this.changePasswordEvent.emit(new EventDTO(
         EventTypes.ChangeUserPassword, new ChangePasswordDTO(this.authService.getEmail()!, this.oldPassword.value, this.newPassword.value)
       ));
-      this.oldPassword.reset();
-      this.newPassword.reset();
-      this.confirmPassword.reset();
+      this.changePasswordFormGroup.reset();
     }else{
-      console.log()
+      console.log("pw not valid")
     }
   }
 

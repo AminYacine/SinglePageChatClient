@@ -8,6 +8,11 @@ export enum EventTypes {
   LoggedOut = "LoggedOut",
   AuthWithJWTToken = "AuthWithJWTToken",
 
+  RegisterUser = "RegisterUser",
+  UserRegistered = "UserRegistered",
+  RegisterFailed = "UserRegisteredFailed",
+
+
   JoinRoom = "JoinRoom",
   RoomJoined = "RoomJoined",
   LeaveRoom = "LeaveRoom",

@@ -10,6 +10,9 @@ import {Router} from "@angular/router";
 import {AuthenticationService} from "../services/authService/authentication.service";
 import {LoggedOutDTO} from "../models/login/LoogedOutDTO";
 import {Subscription} from "rxjs";
+import {UserRegisteredDTO} from "../models/register/UserRegisteredDTO";
+import {RegisterUserDTO} from "../models/register/RegisterUserDTO";
+import {UserRegisterFailedDTO} from "../models/register/UserRegisterFailedDTO";
 
 @Component({
   selector: 'app-login',
@@ -17,22 +20,20 @@ import {Subscription} from "rxjs";
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
-
-  loginData: FormGroup;
-  email: FormControl;
-  password: FormControl;
-  isLoggedIn: boolean = false;
-  showInvalidInput: boolean = false;
+  inLogin: boolean = true;
   socketStatusSubscription!: Subscription;
 
-  constructor(private evtHandlerService: EventHandlerService, private router: Router, private authService: AuthenticationService) {
+  loginData!: FormGroup;
+  email!: FormControl;
+  password!: FormControl;
 
-    this.email = new FormControl("", Validators.required);
-    this.password = new FormControl("", Validators.required);
-    this.loginData = new FormGroup({
-      email: this.email,
-      password: this.password
-    });
+  registerData!: FormGroup;
+  emailRegister!: FormControl;
+  userNameRegister!: FormControl;
+  passwordRegister!: FormControl;
+  passwordConfirm!: FormControl;
+  constructor(private evtHandlerService: EventHandlerService, private router: Router, private authService: AuthenticationService) {
+    this.initForms();
   }
 
   ngOnInit(): void {
@@ -52,22 +53,43 @@ export class LoginComponent implements OnInit {
     });
 
     this.socketStatusSubscription = this.evtHandlerService.socketStatus.subscribe({
-        next: value => {
-          const ev: Event = value;
-          //todo message in ui
-          console.log("Connection to server successful", ev.type);
-        },
-        complete: () => {
-          //todo server offline, try again later by reloading the page
-          console.log("Connection closed");
-        }
-      });
+      next: value => {
+        const ev: Event = value;
+        //todo message in ui
+        console.log("Connection to server successful", ev.type);
+      },
+      complete: () => {
+        //todo server offline, try again later by reloading the page
+        console.log("Connection closed");
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.evtHandlerService.message.unsubscribe();
     this.socketStatusSubscription.unsubscribe();
     console.log("unsubscribed");
+  }
+
+
+  private initForms() {
+    this.email = new FormControl("", Validators.required);
+    this.password = new FormControl("", Validators.required);
+    this.loginData = new FormGroup({
+      email: this.email,
+      password: this.password
+    });
+
+    this.emailRegister = new FormControl("", Validators.required);
+    this.passwordRegister = new FormControl("", Validators.required);
+    this.userNameRegister = new FormControl("", Validators.required);
+    this.passwordConfirm = new FormControl("", Validators.required);
+    this.registerData = new FormGroup({
+      email: this.emailRegister,
+      password: this.passwordRegister,
+      passwordConfirm: this.passwordConfirm,
+      username: this.userNameRegister,
+    });
   }
 
 
@@ -85,12 +107,20 @@ export class LoginComponent implements OnInit {
         this.handleLoggedOutEvent(eventDTO);
         break;
       }
+      case EventTypes.UserRegistered: {
+        this.handleUserRegistered(eventDTO.value);
+        break;
+      }
+      case EventTypes.RegisterFailed: {
+        this.handleUserRegistereFailed(eventDTO.value);
+        break;
+      }
       default:
         console.log("Server: ", eventDTO.type);
     }
   }
 
-  handleLoggedInEvent(event: EventDTO): void {
+  private handleLoggedInEvent(event: EventDTO): void {
 
     console.log("Logged in: ", event.value);
     const sessionData: LoggedInDTO = event.value;
@@ -99,15 +129,28 @@ export class LoginComponent implements OnInit {
     this.router.navigateByUrl("/chat");
   }
 
-  handleLoggInFailed(event: EventDTO): void {
+  private handleLoggInFailed(event: EventDTO): void {
     //todo display error message
     console.log("Login Failed");
   }
 
-  handleLoggedOutEvent(event: EventDTO) {
+  private handleLoggedOutEvent(event: EventDTO) {
     //todo display successfully logged out
     const message: LoggedOutDTO = event.value;
     console.log("LoggedOut successfully ", message.email);
+  }
+
+
+  private handleUserRegistered(userRegisteredEvent: UserRegisteredDTO) {
+    console.log("Registered", userRegisteredEvent.email);
+    this.registerData.reset();
+    this.switchToLoginView();
+    //todo display successfully registered please login
+  }
+
+  private handleUserRegistereFailed(registerFailed: UserRegisterFailedDTO) {
+    console.log("Register Failed with email", registerFailed.email)
+    //todo email already in use
   }
 
   /**
@@ -116,8 +159,23 @@ export class LoginComponent implements OnInit {
   login() {
     if (this.loginData.valid) {
       this.evtHandlerService.message.next(new EventDTO(EventTypes.Login, new LoginDTO(this.email.value, this.password.value)))
-    } else {
-      this.showInvalidInput = true;
     }
   }
+
+  register() {
+    if (this.registerData.valid) {
+      this.evtHandlerService.message.next(
+        new EventDTO(EventTypes.RegisterUser, new RegisterUserDTO(this.emailRegister.value, this.userNameRegister.value, this.passwordRegister.value ) ))
+    }
+  }
+
+  switchToRegisterView() {
+    this.inLogin = false;
+  }
+
+  switchToLoginView(){
+    this.inLogin = true;
+  }
+
+
 }
