@@ -1,4 +1,4 @@
-import {ReceivedMessageDTO} from "./dtos/ReceivedMessageDTO";
+import {ReceivedMessageDTO} from "./dtos/info/ReceivedMessageDTO";
 import {DatePipe} from "@angular/common";
 
 export class ServerInfo extends ReceivedMessageDTO {

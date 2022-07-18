@@ -1,4 +1,4 @@
-import {ReceivedMessageDTO} from "./dtos/ReceivedMessageDTO";
+import {ReceivedMessageDTO} from "./dtos/info/ReceivedMessageDTO";
 
 export class MessageBlock {
   messages: ReceivedMessageDTO[] = [];
