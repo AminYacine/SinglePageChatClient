@@ -4,6 +4,7 @@ export enum EventTypes {
   Login = "Login",
   LoggedIn = "LoggedIn",
   LogginFailed = "LogginFailed",
+
   Logout = "Logout",
   LoggedOut = "LoggedOut",
   AuthWithJWTToken = "AuthWithJWTToken",
@@ -12,20 +13,31 @@ export enum EventTypes {
   UserRegistered = "UserRegistered",
   RegisterFailed = "UserRegisteredFailed",
 
-
   JoinRoom = "JoinRoom",
   RoomJoined = "RoomJoined",
   LeaveRoom = "LeaveRoom",
   RoomLeft = "RoomLeft",
+
+  GrantOp = "GrantOp",
   OpGranted = "OpGranted",
+
+  SetInviteRoom = "SetInviteRoom",
+  InviteToRoom = "InviteToRoom",
+  InvitedToRoom ="InvitedToRoom",
+  InvitedOfRoomRequired = "InvitedOfRoomRequired",
+
+  SetVoiceRoom = "SetVoiceRoom",
+  GrantVoice = "GrantVoice",
   VoiceGranted = "VoiceGranted",
+  VoiceInRoomRequired = "VoiceInRoomRequired",
 
   SendMessage = "SendMessageToRoom",
   MessageSendToRoom = "MessageSendToRoom",
 
-  UserRename =  "UserRename",
+  UserRename = "UserRename",
   RenamedUser = "UserRenamed",
   RenamedUserInRoom = "RenamedUser",
+
   ChangeUserPassword = "ChangeUserPassword",
   ChangedUserPassword = "ChangedUserPassword",
 }
