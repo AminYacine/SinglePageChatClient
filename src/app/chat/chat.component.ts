@@ -24,6 +24,9 @@ import {VoiceInRoomRequiredDTO} from "../models/room/dtos/info/VoiceInRoomRequir
 import {InvitedOfRoomRequiredDTO} from "../models/room/dtos/info/InvitedOfRoomRequiredDTO";
 import {InvitedToRoomDTO} from "../models/room/dtos/info/InvitedToRoomDTO";
 import {JoinRoomFailed} from "../models/user/JoinRoomFailed";
+import {MatSnackBar} from "@angular/material/snack-bar";
+import {MatDialog} from "@angular/material/dialog";
+import {InviteDialogComponent} from "./invite-dialog/invite-dialog.component";
 
 @Component({
   selector: 'app-chat',
@@ -53,32 +56,30 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     private evtHandlerService: EventHandlerService,
     private chatService: ChatService,
     private authService: AuthenticationService,
+    private snackbar: MatSnackBar,
+    private dialog: MatDialog,
   ) {
     this.username = this.authService.getUserName()!;
     this.initForms();
   }
 
   ngOnInit(): void {
-    console.log("chat init")
     this.evtHandlerService.message.subscribe({
       next: eventDTO => {
         this.handleEvent(eventDTO);
       },
       error: err => {
-        //todo display error message
-        console.log("error", err);
+        const ev: EventDTO = err;
+        this.snackbar.open("Error " + ev.value, "Ok", {duration: 3000});
       },
     });
 
     this.socketStatusSubscription = this.evtHandlerService.socketStatus.subscribe({
       next: value => {
-        const ev: Event = value;
-        //todo message in ui
-        console.log("Connection to server successful", ev.type);
+        this.snackbar.open("Successfully connected to server", "Ok", {duration: 3000});
       },
       complete: () => {
-        //todo server offline, try again later by reloading the page
-        console.log("Connection closed");
+        this.snackbar.open("Connection to Server lost", "Reload", {duration: 10000});
       }
     });
   }
@@ -102,7 +103,6 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   }
 
   async ngOnDestroy(): Promise<void> {
-    console.log("chat unsubscribed");
     this.evtHandlerService.message.unsubscribe();
     this.socketStatusSubscription.unsubscribe();
   }
@@ -180,7 +180,10 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   }
 
   private handleSocketIDEvent(eventDTO: EventDTO) {
-    console.log("New socket connection", eventDTO.value)
+    // this.snackbar.open("New server connection", "Ok", {duration: 3000});
+
+    //login with token
+    //todo introduce a permanent client id for session
     this.evtHandlerService.message.next(
       new EventDTO(EventTypes.AuthWithJWTToken,
         new JWTAuthDTO(this.authService.getToken()!, this.authService.getEmail()!)
@@ -212,12 +215,11 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     this.rooms.forEach(room => {
       room.changeUsername(email, newName);
     });
-    //todo display successfully renamed
+    this.snackbar.open("Successfully renamed", "Ok", {duration: 3000});
   }
 
   private handlePasswordChangedEvent(pwChangedDto: PasswordChangedDTO) {
-    console.log("Password Successfully changed", pwChangedDto)
-    //todo display successfully password changed
+    this.snackbar.open("Password successfully changed", "Ok", {duration: 3000});
   }
 
   private handleJoinedRoomEvent(event: EventDTO): void {
@@ -234,7 +236,6 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
         joinedRoom.addUser(new User(roomJoinedDTO.email, roomJoinedDTO.name));
         this.handleMessageSendToRoom(new ServerInfo("User \"" + roomJoinedDTO.name + "\" joined the chat", joinedRoom.getName()));
       }
-      console.log(joinedRoom?.users)
     }
   }
 
@@ -251,15 +252,14 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   }
 
   private handleLoggedOutEvent(event: EventDTO) {
-    const message: LoggedOutDTO = event.value;
-    console.log("LoggedOut ", message.email);
     this.authService.loggedOut();
+    this.snackbar.open("Successfully logged out", "Ok", {duration: 3000});
   }
 
+  // todo change behaviour with permanent client id
   private handleLoggInFailed() {
-    //todo display message: login gain, the session is expired
-    console.log("login failed")
-    this.sendLogout();
+    this.authService.loggedOut();
+    this.snackbar.open("Session expired, login again", "Ok", {duration: 3000});
   }
 
   private handleRoomLeft(roomLeftDTO: RoomLeftDTO, byKick: boolean) {
@@ -291,8 +291,7 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
       }
       //when user was kicked message is displayed
       if (byKick) {
-        //todo show message u were kicked from room ... by an op
-        console.log("you were kicked by an from room", affectedRoom.getName())
+        this.snackbar.open("You were kicked from room " + affectedRoom.getName(), "Ok", {duration: 3000});
       }
     }
   }
@@ -332,7 +331,10 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   }
 
   sendJoinRoom() {
-    this.chatService.joinRoom(this.joinRoomForm, this.roomName);
+    if (this.joinRoomForm.valid) {
+      this.chatService.joinRoom( this.roomName.value);
+      this.roomName.reset();
+    }
   }
 
   sendLogout() {
@@ -368,39 +370,54 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     const room = this.rooms.find(room => room.getName() == opGranted.roomName);
     if (room !== undefined) {
       room.setOpForUser(opGranted.email, opGranted.op);
-      //to hide user commands when op role lost
+
       if (opGranted.email === this.authService.getEmail()) {
-        if (this.userCommandShown && !opGranted.op) {
-          this.toggleShowUserCommands(new User("", ""))
+        if (!opGranted.op) {
+          //to hide user commands when op role lost
+          if (this.userCommandShown) {
+            this.toggleShowUserCommands(new User("", ""))
+          }
+          this.snackbar.open("Op status removed for room \"" + opGranted.roomName + "\"", "Ok", {duration: 3000});
+        } else {
+          this.snackbar.open("Op status granted  for room \"" + opGranted.roomName + "\"", "Ok", {duration: 3000});
         }
       }
     }
-    console.log("Server: Op granted", opGranted.email, opGranted.op);
   }
 
   private handleVoiceGranted(voiceGranted: VoiceGrantedDTO) {
     const room = this.rooms.find(room => room.getName() == voiceGranted.roomName);
     if (room !== undefined) {
       room.setVoiceForUser(voiceGranted.email, voiceGranted.voice);
-      //todo display new role dependant on boolean
+      //if event is for current user
+      if (voiceGranted.email === this.authService.getEmail()) {
+        if (voiceGranted.voice) {
+          this.snackbar.open("Voice status granted for room \"" + voiceGranted.roomName + "\"", "Ok", {duration: 3000});
+        } else {
+          this.snackbar.open("Voice status removed for room \"" + voiceGranted.roomName + "\"", "Ok", {duration: 3000});
+        }
+      }
     }
-    console.log("Server: voice granted", voiceGranted.email, voiceGranted.voice);
-    console.log("current user has voice: ", this.currentChatroom.hasLoggedInUserVoice())
   }
 
   private handleInvitedToRoom(invitedToRoom: InvitedToRoomDTO) {
+    //for invited user
     if (invitedToRoom.email === this.authService.getEmail()) {
+      let dialogRef;
       if (invitedToRoom.invite) {
-        //todo show message if user wants to join room
+        dialogRef = this.dialog.open(InviteDialogComponent, {data: {roomName: invitedToRoom.roomName}})
+        dialogRef.afterClosed().subscribe(result => {
+          if (result.join) {
+            this.chatService.joinRoom(invitedToRoom.roomName);
+          }
+        });
       } else {
-        //todo show message that invite was revoked
+        this.snackbar.open("Invitation to room \""+invitedToRoom.roomName+" was revoked", "Ok", {duration: 3000});
       }
-
     }
-    console.log("Server: Invited To Room", invitedToRoom);
   }
 
-  //todo display info message
+
   private handleVoiceInRoomReq(voiceInRoomReq: VoiceInRoomRequiredDTO) {
     const affectedRoom = this.rooms.find(room => {
       return room.getName() === voiceInRoomReq.roomName
@@ -416,7 +433,6 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     console.log("Server: Invite of Room required", invitedOfRoomReq);
   }
 
-
   sendSetVoiceRoom(room: ChatRoom) {
     room.toggleIsVoiceReq()
     this.chatService.setVoiceRoom(room.getName(), room.isVoiceReq);
@@ -430,7 +446,7 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   sendInviteUser(roomName: string) {
     if (this.inviteUserForm.valid) {
       this.chatService.sendInvitationToRoom(roomName, this.userToInvite.value);
-      //todo message invite was sent
+      this.snackbar.open("Invitation sent", "Ok", {duration: 3000});
     }
     this.inviteUserForm.reset();
   }
@@ -444,7 +460,7 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   }
 
   sendKickUser(userToKick: User) {
-      this.chatService.sendKickUser(userToKick.email, this.currentChatroom);
+    this.chatService.sendKickUser(userToKick.email, this.currentChatroom);
   }
 
   toggleShowRoomCommands() {
@@ -459,8 +475,7 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   }
 
   private handleJoinRoomFailed(joineFailed: JoinRoomFailed) {
-    //todo display message Join failed, Invitation needed
-    console.log("You cant join this room without invitation")
+    this.snackbar.open("To join the room an invitation is required", "Ok", {duration: 3000});
   }
 
   getAuthService() {
@@ -470,6 +485,5 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   private handleUserKicked(userKicked: RoomLeftDTO) {
     this.handleRoomLeft(userKicked, true);
   }
-
 
 }

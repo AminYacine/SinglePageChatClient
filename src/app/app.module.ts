@@ -12,6 +12,9 @@ import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {MatButtonModule} from "@angular/material/button";
+import {MatSnackBarModule} from "@angular/material/snack-bar";
+import {MatDialogModule} from "@angular/material/dialog";
+import { InviteDialogComponent } from './chat/invite-dialog/invite-dialog.component';
 
 @NgModule({
   declarations: [
@@ -19,6 +22,7 @@ import {MatButtonModule} from "@angular/material/button";
     ChatComponent,
     ProfileComponent,
     LoginComponent,
+    InviteDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -30,6 +34,8 @@ import {MatButtonModule} from "@angular/material/button";
     MatInputModule,
     BrowserAnimationsModule,
     MatButtonModule,
+    MatSnackBarModule,
+    MatDialogModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

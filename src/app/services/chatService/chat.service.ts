@@ -24,14 +24,11 @@ export class ChatService {
   /**
    * Method to send JoinRoom Event to websocket
    */
-  joinRoom(joinForm: FormGroup, roomName: FormControl) {
-    if (joinForm.valid) {
+  joinRoom(roomName: string) {
       this.evtHandlerService.message.next(
         new EventDTO(
-          EventTypes.JoinRoom, {"roomName": roomName.value}
+          EventTypes.JoinRoom, {"roomName": roomName}
         ));
-      roomName.reset();
-    }
   }
 
   /**
@@ -107,6 +104,7 @@ export class ChatService {
       new EventDTO(
         EventTypes.InviteToRoom, new InviteToRoomDTO(room, userEmail, true)
       ));
+    //todo if sent a second time set boolean to false to trigger message
   }
 
   sendGrantVoice(currentChatroom: ChatRoom, userEmail: string, voice: boolean) {

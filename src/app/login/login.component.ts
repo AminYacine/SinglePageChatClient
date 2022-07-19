@@ -13,6 +13,8 @@ import {Subscription} from "rxjs";
 import {UserRegisteredDTO} from "../models/register/UserRegisteredDTO";
 import {RegisterUserDTO} from "../models/register/RegisterUserDTO";
 import {UserRegisterFailedDTO} from "../models/register/UserRegisterFailedDTO";
+import {MatSnackBar} from "@angular/material/snack-bar";
+import {LoginFailedDTO} from "../models/login/LoginFailedDTO";
 
 @Component({
   selector: 'app-login',
@@ -32,7 +34,8 @@ export class LoginComponent implements OnInit {
   userNameRegister!: FormControl;
   passwordRegister!: FormControl;
   passwordConfirm!: FormControl;
-  constructor(private evtHandlerService: EventHandlerService, private router: Router, private authService: AuthenticationService) {
+
+  constructor(private evtHandlerService: EventHandlerService, private router: Router, private authService: AuthenticationService, private snackbar: MatSnackBar) {
     this.initForms();
   }
 
@@ -48,19 +51,21 @@ export class LoginComponent implements OnInit {
         this.handleEvent(eventDTO);
       },
       error: err => {
-        console.log("error", err)
+        const ev: EventDTO = err;
+        this.snackbar.open("Error " + ev.value, "Ok", {duration: 3000});
       },
     });
 
     this.socketStatusSubscription = this.evtHandlerService.socketStatus.subscribe({
       next: value => {
         const ev: Event = value;
-        //todo message in ui
-        console.log("Connection to server successful", ev.type);
+        this.snackbar.open("Successfully connected to server", "Ok", {duration: 3000});
       },
       complete: () => {
-        //todo server offline, try again later by reloading the page
-        console.log("Connection closed");
+        const sb = this.snackbar.open("Connection to Server lost", "Reload", {duration: 10000});
+        sb.onAction().subscribe(value => {
+          window.location.reload();
+        })
       }
     });
   }
@@ -100,11 +105,11 @@ export class LoginComponent implements OnInit {
         break;
       }
       case EventTypes.LogginFailed: {
-        this.handleLoggInFailed(eventDTO);
+        this.handleLoggInFailed(eventDTO.value);
         break;
       }
       case EventTypes.LoggedOut: {
-        this.handleLoggedOutEvent(eventDTO);
+        this.handleLoggedOutEvent(eventDTO.value);
         break;
       }
       case EventTypes.UserRegistered: {
@@ -121,36 +126,31 @@ export class LoginComponent implements OnInit {
   }
 
   private handleLoggedInEvent(event: EventDTO): void {
-
-    console.log("Logged in: ", event.value);
     const sessionData: LoggedInDTO = event.value;
     const session = new Session(sessionData.id, sessionData.token, sessionData.email, sessionData.name);
     this.authService.loggedIn(session);
     this.router.navigateByUrl("/chat");
+    const sb = this.snackbar.open("Logged in", "Ok", {duration: 2000});
   }
 
-  private handleLoggInFailed(event: EventDTO): void {
-    //todo display error message
-    console.log("Login Failed");
+  private handleLoggInFailed(event: LoginFailedDTO): void {
+    this.snackbar.open("User and password don't match", "Ok");
   }
 
-  private handleLoggedOutEvent(event: EventDTO) {
-    //todo display successfully logged out
-    const message: LoggedOutDTO = event.value;
-    console.log("LoggedOut successfully ", message.email);
+  private handleLoggedOutEvent(message: LoggedOutDTO) {
+    this.snackbar.open("Successfully logged out!", "Ok", {duration: 3000});
   }
 
 
   private handleUserRegistered(userRegisteredEvent: UserRegisteredDTO) {
-    console.log("Registered", userRegisteredEvent.email);
     this.registerData.reset();
     this.switchToLoginView();
-    //todo display successfully registered please login
+    this.snackbar.open("Successfully Registered!", "Ok", {duration: 3000});
   }
 
   private handleUserRegistereFailed(registerFailed: UserRegisterFailedDTO) {
     console.log("Register Failed with email", registerFailed.email)
-    //todo email already in use
+    this.snackbar.open("Email "+registerFailed.email+" already in use", "Ok", {duration: 4000});
   }
 
   /**
@@ -165,7 +165,7 @@ export class LoginComponent implements OnInit {
   register() {
     if (this.registerData.valid) {
       this.evtHandlerService.message.next(
-        new EventDTO(EventTypes.RegisterUser, new RegisterUserDTO(this.emailRegister.value, this.userNameRegister.value, this.passwordRegister.value ) ))
+        new EventDTO(EventTypes.RegisterUser, new RegisterUserDTO(this.emailRegister.value, this.userNameRegister.value, this.passwordRegister.value)))
     }
   }
 
@@ -173,7 +173,7 @@ export class LoginComponent implements OnInit {
     this.inLogin = false;
   }
 
-  switchToLoginView(){
+  switchToLoginView() {
     this.inLogin = true;
   }
 
