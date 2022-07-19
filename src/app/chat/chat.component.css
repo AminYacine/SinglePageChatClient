@@ -78,6 +78,11 @@ a {
   cursor: pointer;
   width: 10%;
 }
+
+.cursor {
+  cursor: pointer;
+}
+
 .logout {
   cursor: pointer;
   margin-right:20px;
@@ -91,6 +96,28 @@ form{
 
 .btn {
   width: 20%;
+}
+
+.send-btn {
+  color: white;
+  border-style: solid;
+  border-color: white;
+}
+
+.join-room {
+  padding-bottom: 20px;
+  margin-bottom: 15px;
+}
+
+#roomMenu{
+  margin-left: 70%;
+}
+
+.room {
+  padding-right: 10px;
+  display: block;
+  justify-content: space-between;
+  width: 100%;
 }
 /* Chat Page */
 
@@ -125,9 +152,10 @@ form{
 }
 
 .chat-sidebar h2 {
-  font-size: 20px;
+  font-size: 14px;
   background: rgba(0, 0, 0, 0.1);
   padding: 10px;
+  margin-top: 20px;
   margin-bottom: 5px;
 }
 
@@ -151,7 +179,7 @@ form{
 .chat-messages .message {
   padding: 10px;
   margin-bottom: 15px;
-  background-color: var(--light-color);
+  background-color: #cdd2fa;
   border-radius: 5px;
 }
 

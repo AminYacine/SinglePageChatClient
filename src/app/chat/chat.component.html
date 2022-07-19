@@ -4,18 +4,34 @@
     <h4>{{currentView}}</h4>
     <span class="userProfile">
       <span class="logout">
-          <mat-icon (click)="sendLogout()">power_settings_new</mat-icon>
-          <mat-icon *ngIf="inChatView" (click)="openUserSettings()">account_circle</mat-icon>
+          <mat-icon (click)="sendLogout()" matTooltip="Logout">power_settings_new</mat-icon>
+          <mat-icon *ngIf="inChatView" (click)="openUserSettings()" matTooltip="Profile">account_circle</mat-icon>
       </span>
     </span>
   </mat-toolbar-row>
   <main class="chat-main">
     <div class="chat-sidebar">
       <h3><i class="fas fa-comments"></i> Rooms:</h3>
+
+      <form id="joinRoom-form" class="join-room" [formGroup]="joinRoomForm" (ngSubmit)="sendJoinRoom()">
+        <input
+          id="roomName"
+          type="text"
+          placeholder="Join new room"
+          required
+          autocomplete="off"
+          formControlName="roomName"
+        />
+        <button class="btn"><i class="fas fa-plus-circle"></i></button>
+      </form>
+
       <div id="all rooms" *ngFor="let room of rooms">
-        <h2 (click)="switchRoom(room)">{{room.getName()}}
-          <div *ngIf="room.unreadMessages > 0"> {{room.unreadMessages}}</div>
-          <button (click)="toggleShowRoomCommands()">Commands</button>
+        <span class="room">
+          <h2 (click)="switchRoom(room)">{{room.getName()}}
+            <div *ngIf="room.unreadMessages > 0"> {{room.unreadMessages}}</div>
+            <mat-icon id="roomMenu" class="cursor" (click)="toggleShowRoomCommands()">menu</mat-icon>
+          </h2>
+        </span>
           <ul id="room-commands" *ngIf="roomCommandShown">
             <li (click)="sendLeaveRoom(room.getName())">leave</li>
             <ul id="op-room-commands" *ngIf="room.isLoggedInUserOp()">
@@ -40,33 +56,25 @@
               </li>
             </ul>
           </ul>
-        </h2>
+
       </div>
 
-      <form id="joinRoom-form" [formGroup]="joinRoomForm" (ngSubmit)="sendJoinRoom()">
-        <input
-          id="roomName"
-          type="text"
-          placeholder="Join new room"
-          required
-          autocomplete="off"
-          formControlName="roomName"
-        />
-        <button class="btn"><i class="fas fa-plus-circle"></i></button>
-      </form>
       <ng-container *ngIf="inChatView">
         <h2><i class="fas fa-users"></i> Users</h2>
         <div id="users">
           <div *ngFor=" let user of currentChatroom.users">
             <div *ngIf="!user.hasLeft">
               {{user.userName}}
-              <button
-                (click)="toggleShowUserCommands(user)"
-                *ngIf="currentChatroom.isLoggedInUserOp()"
-              >Commands
-              </button>
-              <div *ngIf="currentChatroom.hasUserVoice(user.email)">voice</div>
-              <div *ngIf="currentChatroom.isUserOp(user.email)">op</div>
+              <span class="material-icons" *ngIf="currentChatroom.hasUserVoice(user.email)"
+                    matTooltip="User has voice rights">
+                settings_voice
+              </span>
+              <span class="material-icons"
+                    matTooltip="User is operator"
+                    *ngIf="currentChatroom.isUserOp(user.email)">
+                admin_panel_settings
+              </span>
+              <mat-icon  class="cursor" (click)="toggleShowUserCommands(user)"  *ngIf="currentChatroom.isLoggedInUserOp()">menu</mat-icon>
             </div>
           </div>
           <ul *ngIf="userCommandShown">
@@ -118,7 +126,7 @@
           autocomplete="off"
           formControlName="message"
         />
-        <button class="send-btn"><i class="fas fa-paper-plane"></i> Send</button>
+        <button class="send-btn"  mat-stroked-button color="primary"><i class="fas fa-paper-plane"></i> Send</button>
       </form>
     </ng-template>
 

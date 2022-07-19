@@ -16,6 +16,7 @@ import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {MatDialogModule} from "@angular/material/dialog";
 import { InviteDialogComponent } from './chat/invite-dialog/invite-dialog.component';
 import {MatToolbarModule} from "@angular/material/toolbar";
+import {MatTooltipModule} from "@angular/material/tooltip";
 
 @NgModule({
   declarations: [
@@ -25,20 +26,21 @@ import {MatToolbarModule} from "@angular/material/toolbar";
     LoginComponent,
     InviteDialogComponent,
   ],
-    imports: [
-        BrowserModule,
-        FormsModule,
-        ReactiveFormsModule,
-        AppRoutingModule,
-        MatFormFieldModule,
-        MatIconModule,
-        MatInputModule,
-        BrowserAnimationsModule,
-        MatButtonModule,
-        MatSnackBarModule,
-        MatDialogModule,
-        MatToolbarModule,
-    ],
+  imports: [
+    BrowserModule,
+    FormsModule,
+    ReactiveFormsModule,
+    AppRoutingModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    BrowserAnimationsModule,
+    MatButtonModule,
+    MatSnackBarModule,
+    MatDialogModule,
+    MatToolbarModule,
+    MatTooltipModule,
+  ],
   providers: [],
   bootstrap: [AppComponent]
 })
