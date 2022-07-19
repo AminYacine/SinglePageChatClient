@@ -39,7 +39,9 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   inChatView: boolean = false;
   currentChatroom: ChatRoom = new ChatRoom("placeHolder");
   username: string;
+  //holds the room for that the command menu was opened
   roomCommandShown: boolean = false;
+  //holds the user for that the command menu was opened
   userCommandShown: boolean = false;
   joinRoomForm!: FormGroup;
   roomName!: FormControl;
@@ -51,6 +53,7 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   userToInvite!: FormControl;
   private socketStatusSubscription!: Subscription;
   userForCommands: User = new User("", "");
+  roomForCommand: ChatRoom = new ChatRoom("");
 
   constructor(
     private evtHandlerService: EventHandlerService,
@@ -434,7 +437,7 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   }
 
   sendSetVoiceRoom(room: ChatRoom) {
-    room.toggleIsVoiceReq()
+    room.toggleIsVoiceReq();
     this.chatService.setVoiceRoom(room.getName(), room.isVoiceReq);
   }
 
@@ -463,15 +466,14 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     this.chatService.sendKickUser(userToKick.email, this.currentChatroom);
   }
 
-  toggleShowRoomCommands() {
+  toggleShowRoomCommands(room: ChatRoom) {
     this.roomCommandShown = !this.roomCommandShown;
+    this.roomForCommand = room;
   }
 
   toggleShowUserCommands(user: User) {
     this.userCommandShown = !this.userCommandShown;
     this.userForCommands = user;
-    console.log("toggled usercommand")
-    console.log("commandUser", user)
   }
 
   private handleJoinRoomFailed(joineFailed: JoinRoomFailed) {

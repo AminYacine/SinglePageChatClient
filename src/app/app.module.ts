@@ -17,6 +17,7 @@ import {MatDialogModule} from "@angular/material/dialog";
 import { InviteDialogComponent } from './chat/invite-dialog/invite-dialog.component';
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
+import {MatBadgeModule} from "@angular/material/badge";
 
 @NgModule({
   declarations: [
@@ -40,6 +41,7 @@ import {MatTooltipModule} from "@angular/material/tooltip";
     MatDialogModule,
     MatToolbarModule,
     MatTooltipModule,
+    MatBadgeModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

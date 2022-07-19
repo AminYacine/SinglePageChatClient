@@ -37,6 +37,10 @@ export class ChatRoom {
     this.users.push(user);
   }
 
+  showUnreadMessages(){
+    return this.unreadMessages > 0;
+  }
+
   /**
    * marks the user as left and won't be displayed anymore
    * @param userToRemove

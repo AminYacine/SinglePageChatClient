@@ -4,8 +4,8 @@
     <h4>{{currentView}}</h4>
     <span class="userProfile">
       <span class="logout">
-          <mat-icon (click)="sendLogout()" matTooltip="Logout">power_settings_new</mat-icon>
           <mat-icon *ngIf="inChatView" (click)="openUserSettings()" matTooltip="Profile">account_circle</mat-icon>
+          <mat-icon (click)="sendLogout()" matTooltip="Logout">power_settings_new</mat-icon>
       </span>
     </span>
   </mat-toolbar-row>
@@ -27,54 +27,63 @@
 
       <div id="all rooms" *ngFor="let room of rooms">
         <span class="room">
-          <h2 (click)="switchRoom(room)">{{room.getName()}}
-            <div *ngIf="room.unreadMessages > 0"> {{room.unreadMessages}}</div>
-            <mat-icon id="roomMenu" class="cursor" (click)="toggleShowRoomCommands()">menu</mat-icon>
+          <h2 (click)="switchRoom(room)"
+              [matBadge]="room.unreadMessages"
+              [matBadgeHidden]="!room.showUnreadMessages()"
+              matBadgeOverlap="true">
+            {{room.getName()}}
+            <mat-icon id="roomMenu" class="cursor" (click)="toggleShowRoomCommands(room)">menu</mat-icon>
+<!--            <span *ngIf="room.unreadMessages > 0"> {{room.unreadMessages}}</span>-->
           </h2>
         </span>
-          <ul id="room-commands" *ngIf="roomCommandShown">
-            <li (click)="sendLeaveRoom(room.getName())">leave</li>
-            <ul id="op-room-commands" *ngIf="room.isLoggedInUserOp()">
-              <li>
-                <label><input type="checkbox" [checked]="room.isVoiceReq" (change)="sendSetVoiceRoom(room) ">Require
-                  voice
-                  to speak</label>
-              </li>
-              <li>
-                <label><input type="checkbox" [checked]="room.isInviteReq" (change)="sendSetInviteRoom(room) ">Require
-                  invitation to join</label>
-              </li>
-              <li>
-                <form [formGroup]="inviteUserForm" (ngSubmit)="sendInviteUser(room.getName())">
-                  <input
-                    type="email"
-                    placeholder="Enter user mail"
-                    required
-                    formControlName="userToInvite">
-                  <button type="submit">Invite</button>
-                </form>
-              </li>
-            </ul>
-          </ul>
-
       </div>
+
+      <ul id="room-commands" *ngIf="roomCommandShown">
+        <li class="cursor" (click)="sendLeaveRoom(roomForCommand.getName())">leave</li>
+        <ul id="op-room-commands" *ngIf="roomForCommand.isLoggedInUserOp()">
+          <li>
+            <label><input type="checkbox" [checked]="roomForCommand.isVoiceReq" (change)="sendSetVoiceRoom(roomForCommand) ">Require
+              voice
+              to speak</label>
+          </li>
+          <li>
+            <label><input type="checkbox" [checked]="roomForCommand.isInviteReq" (change)="sendSetInviteRoom(roomForCommand) ">Require
+              invitation to join</label>
+          </li>
+          <li>
+            <form [formGroup]="inviteUserForm" (ngSubmit)="sendInviteUser(roomForCommand.getName())">
+              <input
+                type="email"
+                placeholder="Enter user mail"
+                required
+                formControlName="userToInvite">
+              <button type="submit">Invite</button>
+            </form>
+          </li>
+        </ul>
+      </ul>
 
       <ng-container *ngIf="inChatView">
         <h2><i class="fas fa-users"></i> Users</h2>
         <div id="users">
           <div *ngFor=" let user of currentChatroom.users">
             <div *ngIf="!user.hasLeft">
-              {{user.userName}}
-              <span class="material-icons" *ngIf="currentChatroom.hasUserVoice(user.email)"
-                    matTooltip="User has voice rights">
-                settings_voice
+              <span class="room-user" id="single-user">
+                  <span  id="user-roles">
+                     {{user.userName}}
+                    <span class="material-icons" *ngIf="currentChatroom.hasUserVoice(user.email)"
+                          matTooltip="User has voice rights">
+                    settings_voice
+                  </span>
+                  <span class="material-icons"
+                        matTooltip="User is operator"
+                        *ngIf="currentChatroom.isUserOp(user.email)">
+                    admin_panel_settings
+                  </span>
               </span>
-              <span class="material-icons"
-                    matTooltip="User is operator"
-                    *ngIf="currentChatroom.isUserOp(user.email)">
-                admin_panel_settings
+                <mat-icon id="user-menu" class="cursor" (click)="toggleShowUserCommands(user)"
+                          *ngIf="currentChatroom.isLoggedInUserOp()">menu</mat-icon>
               </span>
-              <mat-icon  class="cursor" (click)="toggleShowUserCommands(user)"  *ngIf="currentChatroom.isLoggedInUserOp()">menu</mat-icon>
             </div>
           </div>
           <ul *ngIf="userCommandShown">
@@ -126,7 +135,7 @@
           autocomplete="off"
           formControlName="message"
         />
-        <button class="send-btn"  mat-stroked-button color="primary"><i class="fas fa-paper-plane"></i> Send</button>
+        <button class="send-btn" mat-stroked-button color="primary"><i class="fas fa-paper-plane"></i> Send</button>
       </form>
     </ng-template>
 
