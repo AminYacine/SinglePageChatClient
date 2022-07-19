@@ -5,6 +5,7 @@ export class User {
   oldUserName: string;
   isOp: boolean;
   hasVoice: boolean;
+  private _hasLeft: boolean;
 
   constructor(email: string, userName: string) {
     this.email = email;
@@ -12,6 +13,7 @@ export class User {
     this.oldUserName = "";
     this.isOp = false;
     this.hasVoice = false;
+    this._hasLeft = false;
   }
 
   changeName(newName: string) {
@@ -25,5 +27,13 @@ export class User {
 
   setHasVoice(voice: boolean) {
     this.hasVoice = voice;
+  }
+
+  get hasLeft(): boolean {
+    return this._hasLeft;
+  }
+
+  setHasLeft(value: boolean) {
+    this._hasLeft = value;
   }
 }
