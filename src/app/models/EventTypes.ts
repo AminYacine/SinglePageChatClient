@@ -17,6 +17,7 @@ export enum EventTypes {
   RoomJoined = "RoomJoined",
   LeaveRoom = "LeaveRoom",
   RoomLeft = "RoomLeft",
+  JoinRoomFailed = "JoinRoomFailed",
 
   GrantOp = "GrantOp",
   OpGranted = "OpGranted",
@@ -40,4 +41,7 @@ export enum EventTypes {
 
   ChangeUserPassword = "ChangeUserPassword",
   ChangedUserPassword = "ChangedUserPassword",
+
+  KickUser = "KickUser",
+  UserKicked = "UserKicked",
 }

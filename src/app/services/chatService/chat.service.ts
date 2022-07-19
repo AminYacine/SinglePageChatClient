@@ -3,9 +3,14 @@ import {EventDTO} from "../../models/EventDTO";
 import {EventTypes} from "../../models/EventTypes";
 import {EventHandlerService} from "../eventHandlerService/event-handler.service";
 import {FormControl, FormGroup} from "@angular/forms";
-import {SendChatMessageDTO} from "../../models/room/dtos/SendChatMessageDTO";
+import {SendChatMessageDTO} from "../../models/room/dtos/commands/SendChatMessageDTO";
 import {ChatRoom} from "../../models/room/ChatRoom";
 import {RenameUserDTO} from "../../models/user/RenameUserDTO";
+import {SetVoiceRoomDTO} from "../../models/room/dtos/commands/SetVoiceRoomDTO";
+import {SetInviteRoomDTO} from "../../models/room/dtos/commands/SetInviteRoomDTO";
+import {InviteToRoomDTO} from "../../models/room/dtos/commands/InviteToRoomDTO";
+import {GrantVoiceDTO} from "../../models/room/dtos/commands/GrantVoiceDTO";
+import {GrantOpDTO} from "../../models/room/dtos/commands/GrantOpDTO";
 
 @Injectable({
   providedIn: 'root'
@@ -71,12 +76,49 @@ export class ChatService {
   }
 
   getRoomByName(roomName: string, rooms: ChatRoom[]): ChatRoom | undefined {
-    return rooms.find(room => roomName === room.name);
+    return rooms.find(room => roomName === room.getName());
   }
 
   removeRoom(affectedRoom: ChatRoom, rooms: ChatRoom[]): ChatRoom[] {
     return rooms.filter(room => {
-      return room.name !== affectedRoom.name;
+      return room.getName() !== affectedRoom.getName();
     });
+  }
+
+  setVoiceRoom(roomName: string, isVoiceReq: boolean) {
+    this.evtHandlerService.message.next(
+      new EventDTO(
+        EventTypes.SetVoiceRoom, new SetVoiceRoomDTO(roomName, isVoiceReq)
+      ));
+    console.log("setVoiceRoom sent")
+  }
+
+  setInviteRoom(roomName: string, isInviteReq: boolean) {
+    this.evtHandlerService.message.next(
+      new EventDTO(
+        EventTypes.SetInviteRoom, new SetInviteRoomDTO(roomName, isInviteReq)
+      ));
+    console.log("setInviteRoom sent")
+  }
+
+  sendInvitationToRoom(room: string, userEmail: string) {
+    this.evtHandlerService.message.next(
+      new EventDTO(
+        EventTypes.InviteToRoom, new InviteToRoomDTO(room, userEmail, true)
+      ));
+  }
+
+  sendGrantVoice(currentChatroom: ChatRoom, userEmail: string, voice: boolean) {
+    this.evtHandlerService.message.next(
+      new EventDTO(
+        EventTypes.GrantVoice, new GrantVoiceDTO(currentChatroom.getName(), userEmail, voice)
+      ));
+  }
+
+  sendGrantOp(currentChatroom: ChatRoom, userEmail: string, op: boolean) {
+    this.evtHandlerService.message.next(
+      new EventDTO(
+        EventTypes.GrantOp, new GrantOpDTO(currentChatroom.getName(), userEmail, op)
+      ));
   }
 }

@@ -1,23 +1,25 @@
-import {ReceivedMessageDTO} from "./dtos/ReceivedMessageDTO";
+import {ReceivedMessageDTO} from "./dtos/info/ReceivedMessageDTO";
 import {User} from "../User";
 import {MessageBlock} from "./MessageBlock";
 
 export class ChatRoom {
-  name: string = "";
+  private _name: string = "";
   messages: MessageBlock[] = [];
   users: User[] = [];
   unreadMessages: number;
-
+  isVoiceReq: boolean;
+  isInviteReq: boolean;
   /*
   Max time difference between the messages to be grouped in one block.
   Since the timestamp is given in min and the delta in sec, the number must be a factor of 60(= one minute)
    */
-   private static MAX_TIME_DELTA: number = 120;
+  private static MAX_TIME_DELTA: number = 120;
 
-
-  constructor(name: string,) {
-    this.name = name;
+  constructor(name: string) {
+    this._name = name;
     this.unreadMessages = 0;
+    this.isVoiceReq = false;
+    this.isInviteReq = false;
   }
 
   addMessage(chatMessage: ReceivedMessageDTO) {
@@ -42,21 +44,57 @@ export class ChatRoom {
   }
 
   getUser(email: string): User | undefined {
-    if (email === "Server"){
-      return new User("Server","Server");
+    if (email === "Server") {
+      const server = new User("Server", "Server");
+      server.isOp = true;
+      server.hasVoice = true;
+      return server;
     }
     return this.users.find(user => {
       return user.email === email;
     });
   }
 
-  changeUsername(email:string, newName: string): string {
+  changeUsername(email: string, newName: string): string {
     const user = this.getUser(email);
     if (user !== undefined) {
-     user.changeName(newName);
-     return user.oldUserName;
+      user.changeName(newName);
+      return user.oldUserName;
     }
-     return newName;
+    return newName;
+  }
+
+  toggleIsVoiceReq(){
+    this.isVoiceReq = !this.isVoiceReq;
+  }
+
+  toggleIsInviteReq() {
+    console.log("invite bool geändert")
+    this.isInviteReq = !this.isInviteReq;
+  }
+
+  isLoggedInUserOp() {
+    return this.getUser(localStorage.getItem("email")!)?.isOp;
+  }
+
+  hasLoggedInUserVoice() {
+    return this.getUser(localStorage.getItem("email")!)?.hasVoice;
+  }
+
+  isUserOp(email: string) {
+    return this.getUser(email)?.isOp;
+  }
+
+  hasUserVoice(email: string) {
+    return this.getUser(email)?.hasVoice;
+  }
+
+  setOpForUser(email: string, op: boolean) {
+   this.getUser(email)?.setIsOp(op);
+  }
+
+  setVoiceForUser(email: string, voice: boolean) {
+    this.getUser(email)?.setHasVoice(voice);
   }
 
   incrementUnreadMessages() {
@@ -81,14 +119,22 @@ export class ChatRoom {
     if (messageBlock !== undefined) {
       if (chatMessage.email === messageBlock.email) {
         const newMessageTimeStamp = Date.parse(chatMessage.sentAt);
-        const blockTimeStamp =  Date.parse(messageBlock.timeStamp);
+        const blockTimeStamp = Date.parse(messageBlock.timeStamp);
         // time delta in sec
-        const timeDelta = (newMessageTimeStamp-blockTimeStamp)/1000;
-        if (timeDelta < ChatRoom.MAX_TIME_DELTA ) {
+        const timeDelta = (newMessageTimeStamp - blockTimeStamp) / 1000;
+        if (timeDelta < ChatRoom.MAX_TIME_DELTA) {
           return true;
         }
       }
     }
     return false;
+  }
+
+  getName(): string {
+    return this._name;
+  }
+
+  setName(value: string) {
+    this._name = value;
   }
 }

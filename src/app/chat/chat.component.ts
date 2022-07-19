@@ -2,13 +2,13 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {EventHandlerService} from "../services/eventHandlerService/event-handler.service";
 import {EventDTO} from "../models/EventDTO";
-import {RoomJoinedDTO} from "../models/room/dtos/RoomJoinedDTO";
+import {RoomJoinedDTO} from "../models/room/dtos/info/RoomJoinedDTO";
 import {ChatRoom} from "../models/room/ChatRoom";
-import {ReceivedMessageDTO} from "../models/room/dtos/ReceivedMessageDTO";
+import {ReceivedMessageDTO} from "../models/room/dtos/info/ReceivedMessageDTO";
 import {EventTypes} from "../models/EventTypes";
 import {LoggedOutDTO} from "../models/login/LoogedOutDTO";
 import {ChatService} from "../services/chatService/chat.service";
-import {RoomLeftDTO} from "../models/room/dtos/RoomLeftDTO";
+import {RoomLeftDTO} from "../models/room/dtos/info/RoomLeftDTO";
 import {AuthenticationService} from "../services/authService/authentication.service";
 import {JWTAuthDTO} from "../models/login/JWTAuthDTO";
 import {Subscription} from "rxjs";
@@ -18,6 +18,11 @@ import {UserRenamedInRoomDTO} from "../models/user/UserRenamedInRoomDTO";
 import {PasswordChangedDTO} from "../models/user/PasswordChangedDTO";
 import {RenameUserDTO} from "../models/user/RenameUserDTO";
 import {UserRenamedSingleDTO} from "../models/user/UserRenamedSingleDTO";
+import {OpGrantedDTO} from "../models/room/dtos/info/OpGrantedDTO";
+import {VoiceGrantedDTO} from "../models/room/dtos/info/VoiceGrantedDTO";
+import {VoiceInRoomRequiredDTO} from "../models/room/dtos/info/VoiceInRoomRequiredDTO";
+import {InvitedOfRoomRequiredDTO} from "../models/room/dtos/info/InvitedOfRoomRequiredDTO";
+import {InvitedToRoomDTO} from "../models/room/dtos/info/InvitedToRoomDTO";
 
 @Component({
   selector: 'app-chat',
@@ -30,12 +35,18 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   inChatView: boolean = false;
   currentChatroom: ChatRoom = new ChatRoom("placeHolder");
   username: string;
-  joinRoomForm: FormGroup;
-  roomName: FormControl;
+  roomCommandShown: boolean = false;
+  userCommandShown: boolean = false;
+  joinRoomForm!: FormGroup;
+  roomName!: FormControl;
 
-  sendMessageForm: FormGroup;
-  message: FormControl;
+  sendMessageForm!: FormGroup;
+  message!: FormControl;
+
+  inviteUserForm!: FormGroup;
+  userToInvite!: FormControl;
   private socketStatusSubscription!: Subscription;
+  userForCommands: User = new User("", "");
 
   constructor(
     private evtHandlerService: EventHandlerService,
@@ -43,15 +54,7 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     private authService: AuthenticationService,
   ) {
     this.username = this.authService.getUserName()!;
-    this.roomName = new FormControl("", Validators.required);
-    this.joinRoomForm = new FormGroup({
-      roomName: this.roomName
-    })
-
-    this.message = new FormControl("", Validators.required);
-    this.sendMessageForm = new FormGroup({
-      message: this.message
-    })
+    this.initForms();
   }
 
   ngOnInit(): void {
@@ -76,16 +79,31 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
         //todo server offline, try again later by reloading the page
         console.log("Connection closed");
       }
-    })
+    });
+  }
 
+
+  initForms() {
+    this.roomName = new FormControl("", Validators.required);
+    this.joinRoomForm = new FormGroup({
+      roomName: this.roomName
+    });
+
+    this.message = new FormControl("", Validators.required);
+    this.sendMessageForm = new FormGroup({
+      message: this.message
+    });
+
+    this.userToInvite = new FormControl("", Validators.required);
+    this.inviteUserForm = new FormGroup({
+      userToInvite: this.userToInvite
+    });
   }
 
   async ngOnDestroy(): Promise<void> {
     console.log("chat unsubscribed");
     this.evtHandlerService.message.unsubscribe();
     this.socketStatusSubscription.unsubscribe();
-    await this.chatService.logout();
-    this.authService.loggedOut();
   }
 
   private handleEvent(eventDTO: EventDTO) {
@@ -126,6 +144,34 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
         this.handlePasswordChangedEvent(eventDTO.value);
         break;
       }
+      case EventTypes.OpGranted: {
+        this.handleOpGranted(eventDTO.value);
+        break;
+      }
+      case EventTypes.VoiceGranted: {
+        this.handleVoiceGranted(eventDTO.value);
+        break;
+      }
+      case EventTypes.VoiceInRoomRequired: {
+        this.handleVoiceInRoomReq(eventDTO.value);
+        break;
+      }
+      case EventTypes.InvitedOfRoomRequired: {
+        this.handleInvitedOfRoomReq(eventDTO.value);
+        break;
+      }
+      case EventTypes.InvitedToRoom: {
+        this.handleInvitedToRoom(eventDTO.value);
+        break;
+      }
+      case EventTypes.JoinRoomFailed: {
+        this.handleJoinRoomFailed(eventDTO.value);
+        break;
+      }
+      case EventTypes.UserKicked: {
+        this.handleUserKicked(eventDTO.value);
+        break;
+      }
       default: {
         console.log("Server: ", eventDTO);
       }
@@ -144,13 +190,13 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     const newName = renamedEvent.name;
     const email = renamedEvent.email;
     if (email === this.authService.getEmail()) {
-      this.handleRenameSubmitter(newName,email)
+      this.handleRenameSubmitter(newName, email)
     } else {
       this.rooms.forEach(room => {
         const oldName = room.changeUsername(email, newName);
         this.handleMessageSendToRoom(new ServerInfo(
           "User \"" + oldName + "\" changed name to  \"" + newName + "\"",
-          room.name));
+          room.getName()));
       });
     }
   }
@@ -159,13 +205,13 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     this.handleRenameSubmitter(renamedEvent.name, renamedEvent.email);
   }
 
-  private handleRenameSubmitter(newName: string, email: string){
-      this.authService.changeUserName(newName);
-      this.username = newName;
-      this.rooms.forEach(room => {
-        room.changeUsername(email, newName);
-      });
-      //todo display successfully renamed
+  private handleRenameSubmitter(newName: string, email: string) {
+    this.authService.changeUserName(newName);
+    this.username = newName;
+    this.rooms.forEach(room => {
+      room.changeUsername(email, newName);
+    });
+    //todo display successfully renamed
   }
 
   private handlePasswordChangedEvent(pwChangedDto: PasswordChangedDTO) {
@@ -174,34 +220,31 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   }
 
   private handleJoinedRoomEvent(event: EventDTO): void {
-    console.log("injoinedRoom");
     const roomJoinedDTO: RoomJoinedDTO = event.value;
-    if (roomJoinedDTO.email == this.authService.getEmail()) {
+    if (roomJoinedDTO.email === this.authService.getEmail()) {
 
       const newChatRoom = new ChatRoom(roomJoinedDTO.roomName);
       this.rooms.push(newChatRoom);
       this.switchRoom(newChatRoom);
       this.currentChatroom.addUser(new User(roomJoinedDTO.email, roomJoinedDTO.name));
-
     } else {
       const joinedRoom = this.chatService.getRoomByName(roomJoinedDTO.roomName, this.rooms);
       if (joinedRoom !== undefined) {
         joinedRoom.addUser(new User(roomJoinedDTO.email, roomJoinedDTO.name));
-        this.handleMessageSendToRoom(new ServerInfo("User \"" + roomJoinedDTO.name + "\" joined the chat", joinedRoom.name));
+        this.handleMessageSendToRoom(new ServerInfo("User \"" + roomJoinedDTO.name + "\" joined the chat", joinedRoom.getName()));
       }
+      console.log(joinedRoom?.users)
     }
-    console.log("User ", roomJoinedDTO.name, "joined the Chat");
   }
 
   private handleMessageSendToRoom(receivedMessage: ReceivedMessageDTO): void {
     const chatRoom = this.chatService.getRoomByName(receivedMessage.roomName, this.rooms);
     if (chatRoom != undefined) {
       chatRoom.addMessage(receivedMessage);
-      if (!this.inChatView || chatRoom.name !== this.currentChatroom.name) {
+      if (!this.inChatView || chatRoom.getName() !== this.currentChatroom.getName()) {
         chatRoom.incrementUnreadMessages();
       }
     }
-
   }
 
   private handleLoggedOutEvent(event: EventDTO) {
@@ -213,19 +256,18 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   private handleLoggInFailed() {
     //todo display message: login gain, the session is expired
     console.log("login failed")
-    this.logout();
+    this.sendLogout();
   }
 
   private handleRoomLeft(event: EventDTO) {
     const roomLeftDTO: RoomLeftDTO = event.value;
-    console.log(roomLeftDTO.email, "left room ", roomLeftDTO.roomName);
     const affectedRoom = this.chatService.getRoomByName(roomLeftDTO.roomName, this.rooms);
 
     if (affectedRoom !== undefined) {
       //if the user is the current user, the room will be removed
       if (roomLeftDTO.email === this.authService.getEmail()) {
         this.rooms = this.chatService.removeRoom(affectedRoom, this.rooms);
-        if (this.currentChatroom.name === roomLeftDTO.roomName) {
+        if (this.currentChatroom.getName() === roomLeftDTO.roomName) {
           //if no rooms are joined the user profile will be displayed
           if (this.rooms.length == 0) {
             this.currentChatroom = new ChatRoom("placeHolder");
@@ -244,13 +286,13 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     }
   }
 
-  receiveRenameUserEvent($event: string) {
+  receiveRenameUserEvent($newName: string) {
     let roomName = "";
     if (this.rooms.length > 0) {
-      roomName = this.rooms[0].name;
+      roomName = this.rooms[0].getName();
     }
     this.chatService.renameUser(new EventDTO(
-      EventTypes.UserRename, new RenameUserDTO(this.authService.getEmail()!, $event, roomName)
+      EventTypes.UserRename, new RenameUserDTO(this.authService.getEmail()!, $newName, roomName)
     ));
   }
 
@@ -259,19 +301,19 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
   }
 
   sendMessage() {
-    this.chatService.sendMessage(this.sendMessageForm, this.currentChatroom.name, this.message);
+    this.chatService.sendMessage(this.sendMessageForm, this.currentChatroom.getName(), this.message);
   }
 
-  joinRoom() {
+  sendJoinRoom() {
     this.chatService.joinRoom(this.joinRoomForm, this.roomName);
   }
 
-  logout() {
+  sendLogout() {
     this.chatService.logout();
     this.authService.loggedOut();
   }
 
-  leaveRoom(roomName: string) {
+  sendLeaveRoom(roomName: string) {
     this.chatService.leaveRoom(roomName);
   }
 
@@ -280,9 +322,9 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
    * @param chatRoom the chat room that was clicked
    */
   switchRoom(chatRoom: ChatRoom) {
-    console.log("clicked switch room")
+    console.log("switch room")
     this.currentChatroom = chatRoom;
-    this.currentView = "Current Room: " + chatRoom.name;
+    this.currentView = "Current Room: " + chatRoom.getName();
     this.inChatView = true;
     chatRoom.clearUnreadMessages();
   }
@@ -295,4 +337,106 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     this.currentView = "User Settings";
   }
 
+  private handleOpGranted(opGranted: OpGrantedDTO) {
+    const room = this.rooms.find(room => room.getName() == opGranted.roomName);
+    if (room !== undefined) {
+      room.setOpForUser(opGranted.email, opGranted.op);
+      //to hide user commands when op role lost
+      if (opGranted.email === this.authService.getEmail()) {
+        if (this.userCommandShown && !opGranted.op) {
+          this.toggleShowUserCommands(new User("", ""))
+        }
+      }
+    }
+    console.log("Server: Op granted", opGranted.email, opGranted.op);
+  }
+
+  private handleVoiceGranted(voiceGranted: VoiceGrantedDTO) {
+    const room = this.rooms.find(room => room.getName() == voiceGranted.roomName);
+    if (room !== undefined) {
+      room.setVoiceForUser(voiceGranted.email, voiceGranted.voice);
+      //todo display new role dependant on boolean
+    }
+    console.log("Server: voice granted", voiceGranted.email, voiceGranted.voice);
+    console.log("current user has voice: ", this.currentChatroom.hasLoggedInUserVoice())
+  }
+
+  private handleInvitedToRoom(invitedToRoom: InvitedToRoomDTO) {
+    if (invitedToRoom.email === this.authService.getEmail()) {
+      if (invitedToRoom.invite) {
+        //todo show message if user wants to join room
+      } else {
+        //todo show message that invite was revoked
+      }
+
+    }
+    console.log("Server: Invited To Room", invitedToRoom);
+  }
+
+  //todo display info message
+  private handleVoiceInRoomReq(voiceInRoomReq: VoiceInRoomRequiredDTO) {
+    const affectedRoom = this.rooms.find(room => {
+      return room.getName() === voiceInRoomReq.roomName
+    });
+    if (affectedRoom !== undefined) {
+      affectedRoom.isVoiceReq = voiceInRoomReq.voice;
+    }
+    const message = voiceInRoomReq.voice ? "Switched to Voice-Only mode" : "Voice-Only mode turned off";
+    this.handleMessageSendToRoom(new ServerInfo(message, voiceInRoomReq.roomName));
+  }
+
+  private handleInvitedOfRoomReq(invitedOfRoomReq: InvitedOfRoomRequiredDTO) {
+    console.log("Server: Invite of Room required", invitedOfRoomReq);
+  }
+
+
+  sendSetVoiceRoom(room: ChatRoom) {
+    room.toggleIsVoiceReq()
+    this.chatService.setVoiceRoom(room.getName(), room.isVoiceReq);
+  }
+
+  sendSetInviteRoom(room: ChatRoom) {
+    room.toggleIsInviteReq()
+    this.chatService.setInviteRoom(room.getName(), room.isInviteReq);
+  }
+
+  sendInviteUser(roomName: string) {
+    if (this.inviteUserForm.valid) {
+      this.chatService.sendInvitationToRoom(roomName, this.userToInvite.value);
+      //todo message invite was sent
+    }
+    this.inviteUserForm.reset();
+  }
+
+  sendGrantVoice(user: User) {
+    this.chatService.sendGrantVoice(this.currentChatroom, user.email, !user.hasVoice);
+  }
+
+  sendGrantOp(user: User) {
+    this.chatService.sendGrantOp(this.currentChatroom, user.email, !user.isOp);
+  }
+
+  toggleShowRoomCommands() {
+    this.roomCommandShown = !this.roomCommandShown;
+  }
+
+  toggleShowUserCommands(user: User) {
+    this.userCommandShown = !this.userCommandShown;
+    this.userForCommands = user;
+    console.log("toggled usercommand")
+    console.log("commandUser", user)
+  }
+
+  private handleJoinRoomFailed(value: any) {
+    //todo display message Join failed, Invitation needed
+    console.log("You cant join this room without invitation")
+  }
+
+  getAuthService() {
+    return this.authService;
+  }
+
+  private handleUserKicked(value: any) {
+    
+  }
 }

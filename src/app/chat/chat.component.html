@@ -4,7 +4,7 @@
     <h4>{{currentView}}</h4>
     <h5>
       <div class="userProfile">
-        <h5 (click)="logout()"><a>Logout</a></h5>
+        <h5 (click)="sendLogout()"><a>Logout</a></h5>
         <i *ngIf="inChatView" (click)="openUserSettings()" class="fas fa-user-alt"></i>
       </div>
     </h5>
@@ -13,14 +13,38 @@
   <main class="chat-main">
     <div class="chat-sidebar">
       <h3><i class="fas fa-comments"></i> Rooms:</h3>
-      <div id="room-name" *ngFor="let room of rooms">
-        <h2 (click)="switchRoom(room)">{{room.name}}
+      <div id="all rooms" *ngFor="let room of rooms">
+        <h2 (click)="switchRoom(room)">{{room.getName()}}
           <div *ngIf="room.unreadMessages > 0"> {{room.unreadMessages}}</div>
-          <div (click)="leaveRoom(room.name)">leave</div>
+          <button (click)="toggleShowRoomCommands()">Commands</button>
+          <ul id="room-commands" *ngIf="roomCommandShown">
+            <li (click)="sendLeaveRoom(room.getName())">leave</li>
+            <ul id="op-room-commands" *ngIf="room.isLoggedInUserOp()">
+              <li>
+                <label><input type="checkbox" [checked]="room.isVoiceReq" (change)="sendSetVoiceRoom(room) ">Require
+                  voice
+                  to speak</label>
+              </li>
+              <li>
+                <label><input type="checkbox" [checked]="room.isInviteReq" (change)="sendSetInviteRoom(room) ">Require
+                  invitation to join</label>
+              </li>
+              <li>
+                <form [formGroup]="inviteUserForm" (ngSubmit)="sendInviteUser(room.getName())">
+                  <input
+                    type="email"
+                    placeholder="Enter user mail"
+                    required
+                    formControlName="userToInvite">
+                  <button type="submit">Invite</button>
+                </form>
+              </li>
+            </ul>
+          </ul>
         </h2>
       </div>
 
-      <form id="joinRoom-form" [formGroup]="joinRoomForm" (ngSubmit)="joinRoom()">
+      <form id="joinRoom-form" [formGroup]="joinRoomForm" (ngSubmit)="sendJoinRoom()">
         <input
           id="roomName"
           type="text"
@@ -33,9 +57,29 @@
       </form>
       <ng-container *ngIf="inChatView">
         <h2><i class="fas fa-users"></i> Users</h2>
-        <ul id="users">
-          <li *ngFor=" let user of currentChatroom.users">{{user.userName}}</li>
-        </ul>
+        <div id="users">
+          <div *ngFor=" let user of currentChatroom.users">
+            {{user.userName}}
+            <button
+              (click)="toggleShowUserCommands(user)"
+              *ngIf="currentChatroom.isLoggedInUserOp()"
+            >Commands</button>
+            <div *ngIf="currentChatroom.hasUserVoice(user.email)">voice</div>
+            <div *ngIf="currentChatroom.isUserOp(user.email)">op</div>
+          </div>
+          <ul *ngIf="userCommandShown">
+            <li>
+              <label><input type="checkbox" [checked]="currentChatroom.hasUserVoice(userForCommands.email)"
+                            (change)="sendGrantVoice(userForCommands)">
+                Grant Voice</label>
+            </li>
+            <li>
+              <label><input type="checkbox" [checked]="currentChatroom.isUserOp(userForCommands.email)"
+                            (change)="sendGrantOp(userForCommands)">
+                Grant Op</label>
+            </li>
+          </ul>
+        </div>
       </ng-container>
 
     </div>
@@ -58,17 +102,24 @@
     ></ProfileComponent>
   </main>
 
-  <div class="chat-form-container">
-    <form id="chat-form" [formGroup]="sendMessageForm" (ngSubmit)="sendMessage()" *ngIf="inChatView">
-      <input
-        id="msg"
-        type="text"
-        placeholder="Enter Message"
-        required
-        autocomplete="off"
-        formControlName="message"
-      />
-      <button class="btn"><i class="fas fa-paper-plane"></i> Send</button>
-    </form>
+  <div class="chat-form-container" *ngIf="inChatView">
+    <ng-template  #voiceView>
+      <form id="chat-form" [formGroup]="sendMessageForm" (ngSubmit)="sendMessage()">
+        <input
+          id="msg"
+          type="text"
+          placeholder="Enter Message"
+          required
+          autocomplete="off"
+          formControlName="message"
+        />
+        <button class="btn"><i class="fas fa-paper-plane"></i> Send</button>
+      </form>
+    </ng-template>
+
+    <ng-template *ngIf="(!currentChatroom.hasLoggedInUserVoice() && currentChatroom.isVoiceReq) else voiceView">
+      You are a spectator
+    </ng-template>
+
   </div>
 </div>
