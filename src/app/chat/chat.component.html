@@ -1,15 +1,14 @@
 <div class="chat-container">
-  <header class="chat-header">
-    <h5><i class="fas fa-smile"></i> SP Chat Client</h5>
+  <mat-toolbar-row class="chat-header">
+    <h4 class="logo"> SP Chat Client</h4>
     <h4>{{currentView}}</h4>
-    <h5>
-      <div class="userProfile">
-        <h5 (click)="sendLogout()"><a>Logout</a></h5>
-        <i *ngIf="inChatView" (click)="openUserSettings()" class="fas fa-user-alt"></i>
-      </div>
-    </h5>
-    <!--    <a href="index.html" class="btn">Leave Room</a>-->
-  </header>
+    <span class="userProfile">
+      <span class="logout">
+          <mat-icon (click)="sendLogout()">power_settings_new</mat-icon>
+          <mat-icon *ngIf="inChatView" (click)="openUserSettings()">account_circle</mat-icon>
+      </span>
+    </span>
+  </mat-toolbar-row>
   <main class="chat-main">
     <div class="chat-sidebar">
       <h3><i class="fas fa-comments"></i> Rooms:</h3>
@@ -64,7 +63,8 @@
               <button
                 (click)="toggleShowUserCommands(user)"
                 *ngIf="currentChatroom.isLoggedInUserOp()"
-              >Commands</button>
+              >Commands
+              </button>
               <div *ngIf="currentChatroom.hasUserVoice(user.email)">voice</div>
               <div *ngIf="currentChatroom.isUserOp(user.email)">op</div>
             </div>
@@ -81,7 +81,7 @@
                 Grant Op</label>
             </li>
             <li>
-             <button type="button" (click)="sendKickUser(userForCommands)">Kick</button>
+              <button type="button" (click)="sendKickUser(userForCommands)">Kick</button>
             </li>
           </ul>
         </div>
@@ -108,7 +108,7 @@
   </main>
 
   <div class="chat-form-container" *ngIf="inChatView">
-    <ng-template  #voiceView>
+    <ng-template #voiceView>
       <form id="chat-form" [formGroup]="sendMessageForm" (ngSubmit)="sendMessage()">
         <input
           id="msg"

@@ -43,16 +43,49 @@ a {
 }
 
 .btn {
-  cursor: pointer;
-  padding: 2px 4px;
-  background: var(--light-color);
-  color: var(--dark-color-a);
-  border: 0;
+  width: 100%;
 }
 
-.userProfile h5 a {
-  color: #fff;
+.btn:hover {
+  background-color: #319ae0;;
+  color: white;
 }
+
+/*.btn {*/
+/*  cursor: pointer;*/
+/*  padding: 2px 4px;*/
+/*  background: var(--light-color);*/
+/*  color: var(--dark-color-a);*/
+/*  border: 0;*/
+/*}*/
+
+/*.userProfile h5 {*/
+/*  color: #fff;*/
+/*  display: inline-block;*/
+/*  width: 100%;*/
+/*}*/
+
+.userProfile {
+  display: inline-block;
+  width: 10%;
+  text-align: right;
+  vertical-align: bottom;
+}
+.logo {
+  margin-left: 20px;
+}
+.account-icon {
+  cursor: pointer;
+  width: 10%;
+}
+.logout {
+  cursor: pointer;
+  margin-right:20px;
+  display: flex;
+  vertical-align: central;
+  justify-content: space-between;
+}
+
 
 /* Chat Page */
 
@@ -68,9 +101,9 @@ a {
   color: #fff;
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
-  padding: 15px;
+  padding: 20px 15px 15px;
   display: flex;
-  align-items: center;
+  vertical-align: central;
   justify-content: space-between;
 }
 
@@ -145,59 +178,7 @@ a {
   flex: 1;
 }
 
-/* Join Page */
-.join-container {
-  max-width: 500px;
-  margin: 80px auto;
-  color: #fff;
-}
-
-.join-header {
-  text-align: center;
-  padding: 20px;
-  background: var(--dark-color-a);
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
-}
-
-.join-main {
-  padding: 30px 40px;
-  background: var(--dark-color-b);
-}
-
-.join-main p {
-  margin-bottom: 20px;
-}
-
-.join-main .form-control {
-  margin-bottom: 20px;
-}
-
-.join-main label {
-  display: block;
-  margin-bottom: 5px;
-}
-
-.join-main input[type='text'] {
-  font-size: 16px;
-  padding: 5px;
-  height: 40px;
-  width: 100%;
-}
-
-.join-main select {
-  font-size: 16px;
-  padding: 5px;
-  height: 40px;
-  width: 100%;
-}
-
-.join-main .btn {
-  margin-top: 20px;
-  width: 100%;
-}
-
-@media (max-width: 700px) {
+@media (max-width: 800px) {
   .chat-main {
     display: block;
   }
