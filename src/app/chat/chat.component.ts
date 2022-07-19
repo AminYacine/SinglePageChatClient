@@ -23,6 +23,7 @@ import {VoiceGrantedDTO} from "../models/room/dtos/info/VoiceGrantedDTO";
 import {VoiceInRoomRequiredDTO} from "../models/room/dtos/info/VoiceInRoomRequiredDTO";
 import {InvitedOfRoomRequiredDTO} from "../models/room/dtos/info/InvitedOfRoomRequiredDTO";
 import {InvitedToRoomDTO} from "../models/room/dtos/info/InvitedToRoomDTO";
+import {JoinRoomFailed} from "../models/user/JoinRoomFailed";
 
 @Component({
   selector: 'app-chat',
@@ -125,7 +126,7 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
         break;
       }
       case EventTypes.RoomLeft: {
-        this.handleRoomLeft(eventDTO);
+        this.handleRoomLeft(eventDTO.value, false);
         break;
       }
       case EventTypes.SocketIdEvent: {
@@ -241,6 +242,8 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     const chatRoom = this.chatService.getRoomByName(receivedMessage.roomName, this.rooms);
     if (chatRoom != undefined) {
       chatRoom.addMessage(receivedMessage);
+      //if the user profile is open or the current chat room does not receive the message
+      //the unread message counter is incremented for that room
       if (!this.inChatView || chatRoom.getName() !== this.currentChatroom.getName()) {
         chatRoom.incrementUnreadMessages();
       }
@@ -259,29 +262,53 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     this.sendLogout();
   }
 
-  private handleRoomLeft(event: EventDTO) {
-    const roomLeftDTO: RoomLeftDTO = event.value;
+  private handleRoomLeft(roomLeftDTO: RoomLeftDTO, byKick: boolean) {
     const affectedRoom = this.chatService.getRoomByName(roomLeftDTO.roomName, this.rooms);
 
     if (affectedRoom !== undefined) {
       //if the user is the current user, the room will be removed
       if (roomLeftDTO.email === this.authService.getEmail()) {
-        this.rooms = this.chatService.removeRoom(affectedRoom, this.rooms);
-        if (this.currentChatroom.getName() === roomLeftDTO.roomName) {
-          //if no rooms are joined the user profile will be displayed
-          if (this.rooms.length == 0) {
-            this.currentChatroom = new ChatRoom("placeHolder");
-            this.openUserSettings();
-          } else {
-            this.switchRoom(this.rooms[0]);
-          }
-        }
+        this.removeRoomCurrentUser(affectedRoom, byKick);
       } else {
-        const leftUser = affectedRoom.getUser(roomLeftDTO.email);
-        if (leftUser !== undefined) {
-          affectedRoom.removeUser(leftUser);
-          this.handleMessageSendToRoom(new ServerInfo("User \"" + leftUser.userName + "\" left the chat", roomLeftDTO.roomName));
-        }
+        //if the left user is not the current one, the user will be removed
+        this.removeUserFromRoom(affectedRoom, roomLeftDTO.email, byKick);
+      }
+    }
+  }
+
+
+  private removeRoomCurrentUser(affectedRoom: ChatRoom, byKick: boolean) {
+    this.rooms = this.chatService.removeRoom(affectedRoom, this.rooms);
+    //if the removed room was the current one
+    if (this.currentChatroom.getName() === affectedRoom.getName()) {
+      //if no rooms are joined the user profile will be displayed
+      // otherwise the room is switch to the first one in the list
+      if (this.rooms.length == 0) {
+        this.currentChatroom = new ChatRoom("placeHolder");
+        this.openUserSettings();
+      } else {
+        this.switchRoom(this.rooms[0]);
+      }
+      //when user was kicked message is displayed
+      if (byKick) {
+        //todo show message u were kicked from room ... by an op
+        console.log("you were kicked by an from room", affectedRoom.getName())
+      }
+    }
+  }
+
+  private removeUserFromRoom(affectedRoom: ChatRoom, leftUserMail: string, byKick: boolean) {
+    const leftUser = affectedRoom.getUser(leftUserMail);
+    console.log("left user", leftUserMail)
+    console.log("found left user", leftUser)
+    const message = byKick ? "was kicked from chat" : "left the chat";
+    console.log("leave message", message)
+    if (leftUser !== undefined) {
+      affectedRoom.removeUser(leftUser);
+      this.handleMessageSendToRoom(new ServerInfo("User \"" + leftUser.userName + "\" " + message, affectedRoom.getName()));
+      //hide User
+      if (byKick && this.userForCommands.email === leftUserMail) {
+        this.toggleShowUserCommands(new User("", ""))
       }
     }
   }
@@ -416,6 +443,10 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     this.chatService.sendGrantOp(this.currentChatroom, user.email, !user.isOp);
   }
 
+  sendKickUser(userToKick: User) {
+      this.chatService.sendKickUser(userToKick.email, this.currentChatroom);
+  }
+
   toggleShowRoomCommands() {
     this.roomCommandShown = !this.roomCommandShown;
   }
@@ -427,7 +458,7 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     console.log("commandUser", user)
   }
 
-  private handleJoinRoomFailed(value: any) {
+  private handleJoinRoomFailed(joineFailed: JoinRoomFailed) {
     //todo display message Join failed, Invitation needed
     console.log("You cant join this room without invitation")
   }
@@ -436,7 +467,9 @@ export class ChatComponent implements OnDestroy, OnInit, OnDestroy {
     return this.authService;
   }
 
-  private handleUserKicked(value: any) {
-    
+  private handleUserKicked(userKicked: RoomLeftDTO) {
+    this.handleRoomLeft(userKicked, true);
   }
+
+
 }

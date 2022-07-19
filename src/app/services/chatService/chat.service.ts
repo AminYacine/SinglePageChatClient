@@ -11,6 +11,7 @@ import {SetInviteRoomDTO} from "../../models/room/dtos/commands/SetInviteRoomDTO
 import {InviteToRoomDTO} from "../../models/room/dtos/commands/InviteToRoomDTO";
 import {GrantVoiceDTO} from "../../models/room/dtos/commands/GrantVoiceDTO";
 import {GrantOpDTO} from "../../models/room/dtos/commands/GrantOpDTO";
+import {KickUserDTO} from "../../models/room/dtos/commands/KickUserDTO";
 
 @Injectable({
   providedIn: 'root'
@@ -119,6 +120,13 @@ export class ChatService {
     this.evtHandlerService.message.next(
       new EventDTO(
         EventTypes.GrantOp, new GrantOpDTO(currentChatroom.getName(), userEmail, op)
+      ));
+  }
+
+  sendKickUser(userToKick: string, currentChatroom: ChatRoom) {
+    this.evtHandlerService.message.next(
+      new EventDTO(
+        EventTypes.KickUser, new KickUserDTO(currentChatroom.getName(), userToKick)
       ));
   }
 }

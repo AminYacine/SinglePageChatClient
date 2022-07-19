@@ -37,22 +37,28 @@ export class ChatRoom {
     this.users.push(user);
   }
 
+  /**
+   * marks the user as left and won't be displayed anymore
+   * @param userToRemove
+   */
   removeUser(userToRemove: User) {
-    this.users = this.users.filter(user => {
-      return user.email !== userToRemove.email;
-    });
+   this.getUser(userToRemove.email).setHasLeft(true);
   }
 
-  getUser(email: string): User | undefined {
+  getUser(email: string): User {
     if (email === "Server") {
       const server = new User("Server", "Server");
       server.isOp = true;
       server.hasVoice = true;
       return server;
     }
-    return this.users.find(user => {
+    const user = this.users.find(user => {
       return user.email === email;
     });
+    if (user === undefined){
+      return new User(email,"notFound")
+    }
+    return user;
   }
 
   changeUsername(email: string, newName: string): string {
