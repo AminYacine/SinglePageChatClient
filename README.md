@@ -6,22 +6,22 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
 
-## Code scaffolding
-
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
-
 ## Build
 
 Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
 
-## Running unit tests
+##Usage
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+To use the application the chat server must first be started. After Start up the client can be executed.
+After Page Reload the client loses all data and has to log in again. 
 
-## Running end-to-end tests
+If the application shows no response to actions just log out, refresh the page to get a new client id and then log in again.
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+##Dokumentation
+Die Dokumentation enthält die verwendeten Pakete, die Architektur und Funktionen des Clients 
+###Pakete
+Die einzigen Pakete sind Bootstrap und Angular Material Design. Diese wurden zur Gestaltung des UI verwendet.
 
-## Further help
+###Quellen
+Falls Code aus fremden Quellen entnommen wurde, ist dies im Code gekennzeichnet. Zur Grundlage des Designs hat das html-Gerüst folgendes Projekts gedient https://github.com/bradtraversy/chatcord
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
