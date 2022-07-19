@@ -7,8 +7,11 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {AppRoutingModule} from "./app-routing.module";
 import {LoginComponent} from './login/login.component';
 import {ProfileComponent} from "./proflie/profile.component";
-import {WebSocketService} from "./services/webSocketService/web-socket.service";
-import {EventHandlerService} from "./services/eventHandlerService/event-handler.service";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatIconModule} from "@angular/material/icon";
+import {MatInputModule} from "@angular/material/input";
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import {MatButtonModule} from "@angular/material/button";
 
 @NgModule({
   declarations: [
@@ -21,7 +24,12 @@ import {EventHandlerService} from "./services/eventHandlerService/event-handler.
     BrowserModule,
     FormsModule,
     ReactiveFormsModule,
-    AppRoutingModule
+    AppRoutingModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    BrowserAnimationsModule,
+    MatButtonModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

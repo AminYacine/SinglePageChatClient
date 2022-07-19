@@ -1,23 +1,25 @@
-<div class="join-container" *ngIf="inLogin  else registerView">
+<div class="join-container" *ngIf="inLogin">
   <header class="join-header">
-    <h1><i class="fas fa-smile"></i> SP Chat Client</h1>
+    <h1> SP Chat Client</h1>
   </header>
   <main class="join-main">
     <form [formGroup]="loginData" (ngSubmit)="login()">
-      <div class="form-control">
-        <label for="email">Email</label>
+      <mat-form-field  appearance="legacy">
+        <mat-label>Email</mat-label>
         <input
-          type="text"
+          matInput
+          type="email"
           name="email"
           id="email"
           placeholder="Enter email..."
           required
           formControlName="email"
         />
-      </div>
-      <div class="form-control">
-        <label for="password">Password</label>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Password</mat-label>
         <input
+          matInput
           type="password"
           name="password"
           id="password"
@@ -25,67 +27,75 @@
           required
           formControlName="password"
         />
-      </div>
-      <button type="submit" class="btn">Login</button>
-      <button type="button" class="btn" (click)="switchToRegisterView()">Register Here</button>
+      </mat-form-field>
+      <button mat-raised-button color="primary" class="btn" type="submit">Login</button>
+      <button mat-raised-button color="primary" class="btn" type="button" (click)="switchToRegisterView()">Register
+        Here
+      </button>
     </form>
   </main>
 </div>
 
-<ng-template #registerView>
-  <div class="join-container">
-    <header class="join-header">
-      <h1><i class="fas fa-smile"></i> SP Chat Client</h1>
-    </header>
-    <main class="join-main">
-      <form [formGroup]="registerData" (ngSubmit)="register()">
-        <div class="form-control">
-          <label for="email">Email</label>
-          <input
-            type="text"
-            name="email"
-            id="email_register"
-            placeholder="Enter email..."
-            required
-            formControlName="email"
-          />
-        </div>
-        <div class="form-control">
-          <label for="email">Username</label>
-          <input
-            type="text"
-            name="email"
-            id="userName"
-            placeholder="Enter username..."
-            required
-            formControlName="username"
-          />
-        </div>
-        <div class="form-control">
-          <label for="password">Password</label>
-          <input
-            type="password"
-            name="password"
-            id="password_register"
-            placeholder="Enter password..."
-            required
-            formControlName="password"
-          />
-        </div>
-        <div class="form-control">
-          <label for="password">Confirm Password</label>
-          <input
-            type="password"
-            name="password"
-            id="password_confirm"
-            placeholder="Confirm password..."
-            required
-            formControlName="passwordConfirm"
-          />
-        </div>
-        <button type="submit" class="btn" >Register</button>
-        <button type="button" class="btn" (click)="switchToLoginView()">Back To Login</button>
-      </form>
-    </main>
-  </div>
-</ng-template>
+
+<div class="join-container" *ngIf="!inLogin">
+  <header class="join-header">
+    <h1> SP Chat Client</h1>
+  </header>
+  <main class="join-main">
+    <form [formGroup]="registerData" (ngSubmit)="register()">
+      <mat-form-field  appearance="legacy">
+        <mat-label>Email</mat-label>
+        <input
+          matInput
+          type="email"
+          name="email"
+          id="email_register"
+          placeholder="Enter email..."
+          required
+          formControlName="email"
+        />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>User name</mat-label>
+        <input
+          matInput
+          type="text"
+          name="email"
+          id="userName"
+          placeholder="Enter username..."
+          required
+          formControlName="username"
+        />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Password</mat-label>
+        <input
+          matInput
+          type="password"
+          name="password"
+          id="password_register"
+          placeholder="Enter password..."
+          required
+          formControlName="password"
+        />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Confirm Password</mat-label>
+        <input
+          matInput
+          type="password"
+          name="password"
+          id="password_confirm"
+          placeholder="Confirm password..."
+          required
+          formControlName="passwordConfirm"
+        />
+      </mat-form-field>
+      <button mat-raised-button color="primary" type="submit" class="btn">Register</button>
+      <button mat-raised-button color="primary" type="button" class="btn" (click)="switchToLoginView()">Back To
+        Login
+      </button>
+    </form>
+  </main>
+</div>
+
